@@ -14,6 +14,9 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'onboarding_page.dart';
 import 'categories_page.dart';
 
+import 'services/entitlements_service.dart';
+import 'pages/paywall_page.dart';
+
 enum SortMode { dateDesc, dateAsc, valueDesc, valueAsc }
 
 class HomeRouter extends StatefulWidget {
@@ -80,9 +83,7 @@ class _HomeRouterState extends State<HomeRouter> {
       }
     });
 
-    _initNotifications()
-        .then((_) => _loadCategories())
-        .then((_) => _loadAll());
+    _initNotifications().then((_) => _loadCategories()).then((_) => _loadAll());
   }
 
   @override
@@ -97,9 +98,10 @@ class _HomeRouterState extends State<HomeRouter> {
 
     await _notifs.initialize(initSettings);
 
-    final androidPlugin =
-        _notifs.resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>();
+    final androidPlugin = _notifs
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
     await androidPlugin?.requestNotificationsPermission();
   }
 
@@ -164,8 +166,7 @@ class _HomeRouterState extends State<HomeRouter> {
     final int? lastYear = (_settings?['last_alert_year'] as int?);
     final int? lastLevel = (_settings?['last_alert_level'] as int?);
 
-    final bool shouldNotify =
-        (lastYear != year) || ((lastLevel ?? 0) < level);
+    final bool shouldNotify = (lastYear != year) || ((lastLevel ?? 0) < level);
 
     if (!shouldNotify) return;
 
@@ -191,11 +192,14 @@ class _HomeRouterState extends State<HomeRouter> {
     final user = supabase.auth.currentUser;
     if (user == null) return;
 
-    await supabase.from('settings').update({
-      'last_alert_year': year,
-      'last_alert_level': level,
-      'last_alert_at': DateTime.now().toUtc().toIso8601String(),
-    }).eq('user_id', user.id);
+    await supabase
+        .from('settings')
+        .update({
+          'last_alert_year': year,
+          'last_alert_level': level,
+          'last_alert_at': DateTime.now().toUtc().toIso8601String(),
+        })
+        .eq('user_id', user.id);
 
     _settings = {
       ...?_settings,
@@ -234,7 +238,8 @@ class _HomeRouterState extends State<HomeRouter> {
       final settingsRow = await supabase
           .from('settings')
           .select(
-              'user_id, year, annual_limit, notifications_enabled, last_alert_year, last_alert_level, last_alert_at')
+            'user_id, year, annual_limit, notifications_enabled, last_alert_year, last_alert_level, last_alert_at',
+          )
           .eq('user_id', user.id)
           .maybeSingle();
 
@@ -393,8 +398,10 @@ class _HomeRouterState extends State<HomeRouter> {
       for (final r in filtered) {
         final data = (r['data'] ?? '').toString();
         final tipo = (r['tipo'] ?? 'R').toString();
-        final categoria =
-            (r['categoria'] ?? 'Geral').toString().replaceAll(';', ',');
+        final categoria = (r['categoria'] ?? 'Geral').toString().replaceAll(
+          ';',
+          ',',
+        );
         final valor = (r['valor'] as num?)?.toDouble() ?? 0.0;
         final rawDesc = r['descricao'];
         final desc = (rawDesc == null ? '' : rawDesc.toString())
@@ -410,27 +417,29 @@ class _HomeRouterState extends State<HomeRouter> {
           ? 'todos'
           : _mesSelecionado!.toString().padLeft(2, '0');
 
-      final file =
-          File('${dir.path}/limite_mei_lancamentos_${year}_$mesTag.csv');
+      final file = File(
+        '${dir.path}/limite_mei_lancamentos_${year}_$mesTag.csv',
+      );
       await file.writeAsString(sb.toString(), flush: true);
 
-      final labelMes =
-          _mesSelecionado == null ? 'Todos' : _mesesShort[_mesSelecionado!];
+      final labelMes = _mesSelecionado == null
+          ? 'Todos'
+          : _mesesShort[_mesSelecionado!];
 
-      await Share.shareXFiles(
-        [XFile(file.path)],
-        text: 'Exportação ($labelMes/$year) - Limite MEI',
-      );
+      await Share.shareXFiles([
+        XFile(file.path),
+      ], text: 'Exportação ($labelMes/$year) - Limite MEI');
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erro ao exportar CSV: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Erro ao exportar CSV: $e')));
     }
   }
 
   List<Map<String, dynamic>> _applyFiltersAndSort(
-      List<Map<String, dynamic>> base) {
+    List<Map<String, dynamic>> base,
+  ) {
     final q = _search.trim().toLowerCase();
 
     final filtered = base.where((r) {
@@ -582,7 +591,11 @@ class _HomeRouterState extends State<HomeRouter> {
     final user = supabase.auth.currentUser;
     if (user == null) return;
 
-    await supabase.from('receitas').delete().eq('id', id).eq('user_id', user.id);
+    await supabase
+        .from('receitas')
+        .delete()
+        .eq('id', id)
+        .eq('user_id', user.id);
     await _loadAll();
   }
 
@@ -601,9 +614,7 @@ class _HomeRouterState extends State<HomeRouter> {
     final now = DateTime.now();
 
     if (_loading) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     if (_error != null) {
@@ -611,7 +622,10 @@ class _HomeRouterState extends State<HomeRouter> {
         appBar: AppBar(
           title: const Text('Limite MEI'),
           actions: [
-            IconButton(icon: const Icon(Icons.download), onPressed: _exportarCsv),
+            IconButton(
+              icon: const Icon(Icons.download),
+              onPressed: _exportarCsv,
+            ),
             PopupMenuButton<String>(
               onSelected: (v) async {
                 if (v == 'cats') await _openCategories();
@@ -632,12 +646,16 @@ class _HomeRouterState extends State<HomeRouter> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(_error!,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(color: Colors.red)),
+                Text(
+                  _error!,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: Colors.red),
+                ),
                 const SizedBox(height: 12),
                 ElevatedButton(
-                    onPressed: _loadAll, child: const Text('Tentar novamente')),
+                  onPressed: _loadAll,
+                  child: const Text('Tentar novamente'),
+                ),
               ],
             ),
           ),
@@ -646,22 +664,22 @@ class _HomeRouterState extends State<HomeRouter> {
     }
 
     if (_settings == null) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     final int year = (_settings!['year'] as int?) ?? DateTime.now().year;
     final double limiteAnual =
         (_settings!['annual_limit'] as num?)?.toDouble() ?? 0.0;
 
-    final String labelMes =
-        _mesSelecionado == null ? 'Todos' : _mesesShort[_mesSelecionado!];
+    final String labelMes = _mesSelecionado == null
+        ? 'Todos'
+        : _mesesShort[_mesSelecionado!];
 
     final filteredLanc = _applyFiltersAndSort(_lancamentos);
     final resumoFiltros = _calcResumoFrom(filteredLanc);
 
-    final bool filtrosAtivos = _search.trim().isNotEmpty ||
+    final bool filtrosAtivos =
+        _search.trim().isNotEmpty ||
         _tipoFiltro != 'T' ||
         _categoriaFiltro != null ||
         _sortMode != SortMode.dateDesc;
@@ -690,10 +708,8 @@ class _HomeRouterState extends State<HomeRouter> {
           final saved = await Navigator.push<bool>(
             context,
             MaterialPageRoute(
-              builder: (_) => LancamentoPage(
-                year: year,
-                categorias: _categorias,
-              ),
+              builder: (_) =>
+                  LancamentoPage(year: year, categorias: _categorias),
             ),
           );
           if (saved == true) await _loadAll();
@@ -705,8 +721,10 @@ class _HomeRouterState extends State<HomeRouter> {
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            Text('Olá, ${user?.email ?? ''}',
-                style: Theme.of(context).textTheme.titleMedium),
+            Text(
+              'Olá, ${user?.email ?? ''}',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
             const SizedBox(height: 12),
 
             _ResumoCard(
@@ -727,8 +745,10 @@ class _HomeRouterState extends State<HomeRouter> {
 
             Card(
               child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 child: Row(
                   children: [
                     const Text('Mês: '),
@@ -739,19 +759,54 @@ class _HomeRouterState extends State<HomeRouter> {
                         value: _mesSelecionado,
                         items: const [
                           DropdownMenuItem<int?>(
-                              value: null, child: Text('Todos')),
-                          DropdownMenuItem<int?>(value: 1, child: Text('Janeiro')),
-                          DropdownMenuItem<int?>(value: 2, child: Text('Fevereiro')),
-                          DropdownMenuItem<int?>(value: 3, child: Text('Março')),
-                          DropdownMenuItem<int?>(value: 4, child: Text('Abril')),
+                            value: null,
+                            child: Text('Todos'),
+                          ),
+                          DropdownMenuItem<int?>(
+                            value: 1,
+                            child: Text('Janeiro'),
+                          ),
+                          DropdownMenuItem<int?>(
+                            value: 2,
+                            child: Text('Fevereiro'),
+                          ),
+                          DropdownMenuItem<int?>(
+                            value: 3,
+                            child: Text('Março'),
+                          ),
+                          DropdownMenuItem<int?>(
+                            value: 4,
+                            child: Text('Abril'),
+                          ),
                           DropdownMenuItem<int?>(value: 5, child: Text('Maio')),
-                          DropdownMenuItem<int?>(value: 6, child: Text('Junho')),
-                          DropdownMenuItem<int?>(value: 7, child: Text('Julho')),
-                          DropdownMenuItem<int?>(value: 8, child: Text('Agosto')),
-                          DropdownMenuItem<int?>(value: 9, child: Text('Setembro')),
-                          DropdownMenuItem<int?>(value: 10, child: Text('Outubro')),
-                          DropdownMenuItem<int?>(value: 11, child: Text('Novembro')),
-                          DropdownMenuItem<int?>(value: 12, child: Text('Dezembro')),
+                          DropdownMenuItem<int?>(
+                            value: 6,
+                            child: Text('Junho'),
+                          ),
+                          DropdownMenuItem<int?>(
+                            value: 7,
+                            child: Text('Julho'),
+                          ),
+                          DropdownMenuItem<int?>(
+                            value: 8,
+                            child: Text('Agosto'),
+                          ),
+                          DropdownMenuItem<int?>(
+                            value: 9,
+                            child: Text('Setembro'),
+                          ),
+                          DropdownMenuItem<int?>(
+                            value: 10,
+                            child: Text('Outubro'),
+                          ),
+                          DropdownMenuItem<int?>(
+                            value: 11,
+                            child: Text('Novembro'),
+                          ),
+                          DropdownMenuItem<int?>(
+                            value: 12,
+                            child: Text('Dezembro'),
+                          ),
                         ],
                         onChanged: (v) async {
                           setState(() => _mesSelecionado = v);
@@ -790,17 +845,20 @@ class _HomeRouterState extends State<HomeRouter> {
                           ChoiceChip(
                             label: const Text('Todos'),
                             selected: _tipoFiltro == 'T',
-                            onSelected: (_) => setState(() => _tipoFiltro = 'T'),
+                            onSelected: (_) =>
+                                setState(() => _tipoFiltro = 'T'),
                           ),
                           ChoiceChip(
                             label: const Text('Receitas'),
                             selected: _tipoFiltro == 'R',
-                            onSelected: (_) => setState(() => _tipoFiltro = 'R'),
+                            onSelected: (_) =>
+                                setState(() => _tipoFiltro = 'R'),
                           ),
                           ChoiceChip(
                             label: const Text('Despesas'),
                             selected: _tipoFiltro == 'D',
-                            onSelected: (_) => setState(() => _tipoFiltro = 'D'),
+                            onSelected: (_) =>
+                                setState(() => _tipoFiltro = 'D'),
                           ),
                         ],
                       ),
@@ -877,7 +935,8 @@ class _HomeRouterState extends State<HomeRouter> {
                               ),
                             ],
                             onChanged: (v) => setState(
-                                () => _sortMode = v ?? SortMode.dateDesc),
+                              () => _sortMode = v ?? SortMode.dateDesc,
+                            ),
                           ),
                         ),
                       ],
@@ -903,8 +962,10 @@ class _HomeRouterState extends State<HomeRouter> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('Lançamentos ($year - $labelMes)',
-                    style: Theme.of(context).textTheme.titleMedium),
+                Text(
+                  'Lançamentos ($year - $labelMes)',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
                 TextButton(onPressed: _loadAll, child: const Text('Atualizar')),
               ],
             ),
@@ -926,8 +987,9 @@ class _HomeRouterState extends State<HomeRouter> {
                 final desc = (r['descricao'] ?? '').toString();
                 final cat = (r['categoria'] ?? 'Geral').toString();
 
-                final title =
-                    tipo == 'D' ? '- ${_formatBRL(valor)}' : _formatBRL(valor);
+                final title = tipo == 'D'
+                    ? '- ${_formatBRL(valor)}'
+                    : _formatBRL(valor);
 
                 final subtitle = [
                   cat,
@@ -999,8 +1061,10 @@ class _ResumoFiltrosCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Resumo dos filtros',
-                style: Theme.of(context).textTheme.titleSmall),
+            Text(
+              'Resumo dos filtros',
+              style: Theme.of(context).textTheme.titleSmall,
+            ),
             const SizedBox(height: 10),
             _row('Itens', count.toString()),
             const SizedBox(height: 6),
@@ -1116,21 +1180,25 @@ class _ResumoCard extends StatelessWidget {
     // Pacote A
     final restante = limiteAnual - totalReceitasAno;
 
-    final int mesesRestantes =
-        (year == now.year) ? (12 - now.month + 1) : (year < now.year ? 0 : 12);
+    final int mesesRestantes = (year == now.year)
+        ? (12 - now.month + 1)
+        : (year < now.year ? 0 : 12);
 
     final double podeFaturarPorMes = (restante > 0 && mesesRestantes > 0)
         ? (restante / mesesRestantes)
         : 0.0;
 
-    final int mesesDecorridos =
-        (year == now.year) ? now.month : (year < now.year ? 12 : 0);
+    final int mesesDecorridos = (year == now.year)
+        ? now.month
+        : (year < now.year ? 12 : 0);
 
-    final double mediaMensalAtual =
-        (mesesDecorridos > 0) ? (totalReceitasAno / mesesDecorridos) : 0.0;
+    final double mediaMensalAtual = (mesesDecorridos > 0)
+        ? (totalReceitasAno / mesesDecorridos)
+        : 0.0;
 
-    final double projecaoAno =
-        (mesesDecorridos > 0) ? (mediaMensalAtual * 12.0) : totalReceitasAno;
+    final double projecaoAno = (mesesDecorridos > 0)
+        ? (mediaMensalAtual * 12.0)
+        : totalReceitasAno;
 
     String projTxt;
     Color? projColor;
@@ -1160,8 +1228,10 @@ class _ResumoCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Resumo $year',
-                style: Theme.of(context).textTheme.titleMedium),
+            Text(
+              'Resumo $year',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
             const SizedBox(height: 12),
 
             _kpiRow('Limite anual (MEI)', formatBRL(limiteAnual)),
@@ -1179,8 +1249,10 @@ class _ResumoCard extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 6),
-            Text('$pctTxt% do limite usado',
-                style: Theme.of(context).textTheme.bodySmall),
+            Text(
+              '$pctTxt% do limite usado',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
 
             const SizedBox(height: 12),
 
@@ -1201,7 +1273,9 @@ class _ResumoCard extends StatelessWidget {
             Text(
               (year == now.year)
                   ? 'Considerando $mesesRestantes mês(es) incluindo o mês atual'
-                  : (year < now.year ? 'Ano encerrado' : 'Ano futuro (12 meses)'),
+                  : (year < now.year
+                        ? 'Ano encerrado'
+                        : 'Ano futuro (12 meses)'),
               style: Theme.of(context).textTheme.bodySmall,
             ),
 
@@ -1215,16 +1289,17 @@ class _ResumoCard extends StatelessWidget {
             const SizedBox(height: 6),
             Text(
               projTxt,
-              style: Theme.of(context)
-                  .textTheme
-                  .bodySmall
-                  ?.copyWith(color: projColor),
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: projColor),
             ),
 
             const Divider(height: 24),
 
-            _kpiRow('Limite proporcional (até $effectiveMonth/12)',
-                formatBRL(limiteProporcional)),
+            _kpiRow(
+              'Limite proporcional (até $effectiveMonth/12)',
+              formatBRL(limiteProporcional),
+            ),
             const SizedBox(height: 8),
             _kpiRow(
               'Saldo proporcional',
@@ -1234,10 +1309,9 @@ class _ResumoCard extends StatelessWidget {
             const SizedBox(height: 6),
             Text(
               ritmoTxt,
-              style: Theme.of(context)
-                  .textTheme
-                  .bodySmall
-                  ?.copyWith(color: ritmoColor),
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: ritmoColor),
             ),
 
             const Divider(height: 24),
@@ -1278,12 +1352,15 @@ class _ResumoCard extends StatelessWidget {
                     ),
                   ),
                   titlesData: FlTitlesData(
-                    topTitles:
-                        const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                    rightTitles:
-                        const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                    leftTitles:
-                        const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                    topTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false),
+                    ),
+                    rightTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false),
+                    ),
+                    leftTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false),
+                    ),
                     bottomTitles: AxisTitles(
                       sideTitles: SideTitles(
                         showTitles: true,
@@ -1292,13 +1369,25 @@ class _ResumoCard extends StatelessWidget {
                           final i = value.toInt();
                           if (i < 0 || i > 11) return const SizedBox.shrink();
                           const labels = [
-                            'Jan','Fev','Mar','Abr','Mai','Jun',
-                            'Jul','Ago','Set','Out','Nov','Dez'
+                            'Jan',
+                            'Fev',
+                            'Mar',
+                            'Abr',
+                            'Mai',
+                            'Jun',
+                            'Jul',
+                            'Ago',
+                            'Set',
+                            'Out',
+                            'Nov',
+                            'Dez',
                           ];
                           return Padding(
                             padding: const EdgeInsets.only(top: 6),
-                            child: Text(labels[i],
-                                style: const TextStyle(fontSize: 10)),
+                            child: Text(
+                              labels[i],
+                              style: const TextStyle(fontSize: 10),
+                            ),
                           );
                         },
                       ),
@@ -1531,7 +1620,8 @@ class _LancamentoPageState extends State<LancamentoPage> {
   Future<void> _excluir() async {
     if (!_isEdit) return;
 
-    final ok = await showDialog<bool>(
+    final ok =
+        await showDialog<bool>(
           context: context,
           builder: (_) => AlertDialog(
             title: const Text('Excluir lançamento?'),
@@ -1562,7 +1652,11 @@ class _LancamentoPageState extends State<LancamentoPage> {
       if (user == null) throw Exception('Usuário não autenticado');
 
       final id = widget.lancamento!['id'];
-      await supabase.from('receitas').delete().eq('id', id).eq('user_id', user.id);
+      await supabase
+          .from('receitas')
+          .delete()
+          .eq('id', id)
+          .eq('user_id', user.id);
 
       if (!mounted) return;
       Navigator.pop(context, true);
@@ -1584,11 +1678,14 @@ class _LancamentoPageState extends State<LancamentoPage> {
 
   @override
   Widget build(BuildContext context) {
-    final dateText = '${_data.day.toString().padLeft(2, '0')}/'
+    final dateText =
+        '${_data.day.toString().padLeft(2, '0')}/'
         '${_data.month.toString().padLeft(2, '0')}/'
         '${_data.year}';
 
-    final cats = widget.categorias.isNotEmpty ? widget.categorias : const ['Geral', 'Outros'];
+    final cats = widget.categorias.isNotEmpty
+        ? widget.categorias
+        : const ['Geral', 'Outros'];
 
     if (!cats.contains(_categoria)) {
       _categoria = cats.contains('Geral') ? 'Geral' : cats.first;
@@ -1625,20 +1722,28 @@ class _LancamentoPageState extends State<LancamentoPage> {
                 DropdownMenuItem(value: 'R', child: Text('Receita')),
                 DropdownMenuItem(value: 'D', child: Text('Despesa')),
               ],
-              onChanged: _loading ? null : (v) => setState(() => _tipo = v ?? 'R'),
+              onChanged: _loading
+                  ? null
+                  : (v) => setState(() => _tipo = v ?? 'R'),
               decoration: const InputDecoration(labelText: 'Tipo'),
             ),
             const SizedBox(height: 12),
             DropdownButtonFormField<String>(
               value: _categoria,
-              items: cats.map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
-              onChanged: _loading ? null : (v) => setState(() => _categoria = v ?? cats.first),
+              items: cats
+                  .map((c) => DropdownMenuItem(value: c, child: Text(c)))
+                  .toList(),
+              onChanged: _loading
+                  ? null
+                  : (v) => setState(() => _categoria = v ?? cats.first),
               decoration: const InputDecoration(labelText: 'Categoria'),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: _valorCtrl,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
               inputFormatters: [BrCurrencyInputFormatter()],
               decoration: const InputDecoration(
                 labelText: 'Valor (R\$)',

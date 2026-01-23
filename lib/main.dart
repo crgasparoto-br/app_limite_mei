@@ -4,6 +4,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'home_router.dart';
 import 'onboarding_page.dart';
 import 'categories_page.dart';
+import 'services/entitlements_service.dart';
+import 'pages/paywall_page.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -13,6 +15,8 @@ Future<void> main() async {
     anonKey:
         'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdnY3ZqZnlxYWFuZGphcHZlZnRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg3NTU0NjYsImV4cCI6MjA4NDMzMTQ2Nn0.etguBa3yG1iwY0hrqXn1fVZyBc5OPxGNsfJz5Sf13-Y',
   );
+
+  await EntitlementsService.instance.load();
 
   runApp(const LimiteMeiApp());
 }
@@ -25,15 +29,13 @@ class LimiteMeiApp extends StatelessWidget {
     return MaterialApp(
       title: 'Limite MEI',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        useMaterial3: true,
-        colorSchemeSeed: Colors.blue,
-      ),
+      theme: ThemeData(useMaterial3: true, colorSchemeSeed: Colors.blue),
       routes: {
         '/home': (_) => const HomeRouter(),
         '/onboarding': (_) => const OnboardingPage(),
         '/login': (_) => const LoginPage(),
         '/categories': (_) => const CategoriesPage(),
+        '/paywall': (_) => const PaywallScreen(),
       },
       home: const AuthGate(),
     );
