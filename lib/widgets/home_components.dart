@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import '../models/lancamento.dart';
+<<<<<<< HEAD
 
 // Aqui coloque widgets extraídos como ResumoCard, ResumoFiltrosCard, FiltersCard e LancamentoItem.
 // Por brevidade incluo apenas assinaturas — implemente a UI conforme necessidade.
+=======
+import '../models/settings_model.dart';
+>>>>>>> 67a4cb5a43e5fce47565a69400c959e8509a5a35
 
 class ResumoCard extends StatelessWidget {
   final DateTime now;
@@ -31,7 +35,11 @@ class ResumoCard extends StatelessWidget {
       ])),
     );
   }
+<<<<<<< HEAD
 }
+=======
+} 
+>>>>>>> 67a4cb5a43e5fce47565a69400c959e8509a5a35
 
 class ResumoFiltrosCard extends StatelessWidget {
   final int count;
@@ -46,7 +54,15 @@ class ResumoFiltrosCard extends StatelessWidget {
     return Card(
       child: Padding(padding: const EdgeInsets.all(12), child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
         Text('$count lançamentos'),
+<<<<<<< HEAD
         Column(crossAxisAlignment: CrossAxisAlignment.end, children: [Text('Receitas: ${formatBRL(receitas)}'), Text('Despesas: ${formatBRL(despesas)}'), Text('Saldo: ${formatBRL(saldo)}')])
+=======
+        Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
+          Text('Receitas: ${formatBRL(receitas)}'),
+          Text('Despesas: ${formatBRL(despesas)}'),
+          Text('Saldo: ${formatBRL(saldo)}'),
+        ])
+>>>>>>> 67a4cb5a43e5fce47565a69400c959e8509a5a35
       ])),
     );
   }
@@ -59,11 +75,17 @@ class FiltersCard extends StatelessWidget {
   final List<String> categorias;
   final String? categoriaFiltro;
   final void Function(String?) onCategoriaChanged;
+<<<<<<< HEAD
   final SortMode sortMode;
   final void Function(SortMode) onSortChanged;
   final VoidCallback onClear;
 
   const FiltersCard({super.key, required this.searchCtrl, required this.tipoFiltro, required this.onTipoChanged, required this.categorias, required this.categoriaFiltro, required this.onCategoriaChanged, required this.sortMode, required this.onSortChanged, required this.onClear});
+=======
+  final VoidCallback onClear;
+
+  const FiltersCard({super.key, required this.searchCtrl, required this.tipoFiltro, required this.onTipoChanged, required this.categorias, required this.categoriaFiltro, required this.onCategoriaChanged, required this.onClear});
+>>>>>>> 67a4cb5a43e5fce47565a69400c959e8509a5a35
 
   @override
   Widget build(BuildContext context) {
@@ -71,6 +93,7 @@ class FiltersCard extends StatelessWidget {
       child: Padding(padding: const EdgeInsets.all(12), child: Column(children: [
         TextField(controller: searchCtrl, decoration: const InputDecoration(labelText: 'Buscar', hintText: 'Descrição, categoria, data...', prefixIcon: Icon(Icons.search))),
         const SizedBox(height: 8),
+<<<<<<< HEAD
         Wrap(spacing: 8, children: [
           ChoiceChip(label: const Text('Todos'), selected: tipoFiltro == 'T', onSelected: (_) => onTipoChanged('T')),
           ChoiceChip(label: const Text('Receitas'), selected: tipoFiltro == 'R', onSelected: (_) => onTipoChanged('R')),
@@ -81,6 +104,26 @@ class FiltersCard extends StatelessWidget {
           const Text('Categoria:'),
           const SizedBox(width: 8),
           Expanded(child: DropdownButton<String?>(isExpanded: true, value: categoriaFiltro, items: [const DropdownMenuItem(value: null, child: Text('Todas')), ...[] /* construir com categorias */], onChanged: onCategoriaChanged)),
+=======
+        Align(alignment: Alignment.centerLeft, child: Wrap(spacing: 8, runSpacing: 8, children: [
+          ChoiceChip(label: const Text('Todos'), selected: tipoFiltro == 'T', onSelected: (_) => onTipoChanged('T')),
+          ChoiceChip(label: const Text('Receitas'), selected: tipoFiltro == 'R', onSelected: (_) => onTipoChanged('R')),
+          ChoiceChip(label: const Text('Despesas'), selected: tipoFiltro == 'D', onSelected: (_) => onTipoChanged('D')),
+        ])),
+        const SizedBox(height: 6),
+        Row(children: [
+          const Spacer(),
+          TextButton.icon(onPressed: onClear, icon: const Icon(Icons.refresh, size: 18), label: const Text('Limpar filtros')), 
+        ]),
+        const SizedBox(height: 8),
+        Row(children: [
+          const Text('Categoria: '),
+          const SizedBox(width: 12),
+          Expanded(child: DropdownButton<String?>(isExpanded: true, value: categoriaFiltro, items: [
+            const DropdownMenuItem<String?>(value: null, child: Text('Todas')),
+            ...[]
+          ], onChanged: onCategoriaChanged)),
+>>>>>>> 67a4cb5a43e5fce47565a69400c959e8509a5a35
         ]),
       ])),
     );
@@ -98,7 +141,12 @@ class LancamentoItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final titulo = lancamento.tipo == 'D' ? '- R\$ ${lancamento.valor.toStringAsFixed(2)}' : 'R\$ ${lancamento.valor.toStringAsFixed(2)}';
     return Dismissible(
+<<<<<<< HEAD
       key: ValueKey('lan_${lancamento.id}'),
+=======
+      key: ValueKey('lan_
+${lancamento.id}'),
+>>>>>>> 67a4cb5a43e5fce47565a69400c959e8509a5a35
       background: Container(color: Colors.red, alignment: Alignment.centerLeft, padding: const EdgeInsets.only(left: 16), child: const Icon(Icons.delete, color: Colors.white)),
       secondaryBackground: Container(color: Colors.red, alignment: Alignment.centerRight, padding: const EdgeInsets.only(right: 16), child: const Icon(Icons.delete, color: Colors.white)),
       onDismissed: (_) => onDelete(),
@@ -114,4 +162,8 @@ class LancamentoItem extends StatelessWidget {
       ),
     );
   }
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> 67a4cb5a43e5fce47565a69400c959e8509a5a35
