@@ -130,7 +130,7 @@ class EntitlementsService {
         'trial_ends_at': e.trialEndsAt?.toUtc().toIso8601String(),
         'premium_ends_at': e.premiumEndsAt?.toUtc().toIso8601String(),
         'updated_at': DateTime.now().toUtc().toIso8601String(),
-      }, upsert: true, onConflict: ['user_id']);
+      }, onConflict: 'user_id');
     } catch (e) {
       if (kDebugMode) print('Failed saveRemote entitlements: $e');
     }
