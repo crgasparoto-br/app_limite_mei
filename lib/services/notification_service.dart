@@ -1,5 +1,5 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'services/supabase_service.dart';
+import 'supabase_service.dart';
 
 class NotificationService {
   final FlutterLocalNotificationsPlugin _notifs = FlutterLocalNotificationsPlugin();
@@ -23,8 +23,9 @@ class NotificationService {
     if (limitAnual <= 0) return;
     final ratio = totalReceitasAno / limitAnual;
     int level = 0;
-    if (ratio >= 0.95) level = 95;
-    else if (ratio >= 0.80) level = 80;
+    if (ratio >= 0.95) {
+      level = 95;
+    } else if (ratio >= 0.80) level = 80;
     else return;
 
     // Timing DB update handled by SupabaseService
