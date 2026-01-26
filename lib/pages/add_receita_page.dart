@@ -49,6 +49,16 @@ class _AddReceitaPageState extends State<AddReceitaPage> {
       return;
     }
 
+    // Validar data não futura
+    final hoje = DateTime.now();
+    final hojeSemHora = DateTime(hoje.year, hoje.month, hoje.day);
+    final dataSelecionadaSemHora = DateTime(_dataSelecionada.year, _dataSelecionada.month, _dataSelecionada.day);
+    
+    if (dataSelecionadaSemHora.isAfter(hojeSemHora)) {
+      _showSnackbar('A data não pode ser futura');
+      return;
+    }
+
     setState(() => _salvando = true);
 
     try {

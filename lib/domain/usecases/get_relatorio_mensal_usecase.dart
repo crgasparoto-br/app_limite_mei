@@ -60,6 +60,9 @@ class GetRelatorioMensalUseCase {
       ..sort((a, b) => b.total.compareTo(a.total));
     final top5 = top5Dias.take(5).toList();
     
+    // Dia de pico (dia com maior faturamento)
+    final diaDePico = top5Dias.isNotEmpty ? top5Dias.first : null;
+    
     return RelatorioMensal(
       ano: ano,
       mes: mes,
@@ -70,6 +73,7 @@ class GetRelatorioMensalUseCase {
       dataMaiorLancamento: dataMaiorLancamento,
       totalPorSemana: totalPorSemana,
       top5Dias: top5,
+      diaDePico: diaDePico,
     );
   }
 }

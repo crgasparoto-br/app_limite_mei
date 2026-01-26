@@ -3,6 +3,7 @@ import '../domain/entities/receita.dart';
 import '../domain/repositories/receita_repository.dart';
 import '../domain/repositories/settings_repository.dart';
 import '../domain/repositories/entitlements_repository.dart';
+import '../data/services/export_service.dart';
 import '../service_locator.dart';
 import '../presentation/widgets/paywall_dialog.dart';
 import 'edit_receita_page.dart';
@@ -18,6 +19,7 @@ class _ReceitasPageState extends State<ReceitasPage> {
   late ReceitaRepository _receitaRepo;
   late SettingsRepository _settingsRepo;
   late EntitlementsRepository _entitlementsRepo;
+  late ExportService _exportService;
 
   List<Receita> _receitas = [];
   List<Receita> _receitasFiltradas = [];
@@ -32,6 +34,7 @@ class _ReceitasPageState extends State<ReceitasPage> {
     _receitaRepo = getIt<ReceitaRepository>();
     _settingsRepo = getIt<SettingsRepository>();
     _entitlementsRepo = getIt<EntitlementsRepository>();
+    _exportService = getIt<ExportService>();
     _loadReceitas();
     _loadPremiumStatus();
   }
@@ -139,6 +142,15 @@ class _ReceitasPageState extends State<ReceitasPage> {
   }
 
   Future<void> _editarReceita(Receita receita) async {
+    // Bloquear edição se FREE e receita está acima de 120
+    if (!_isPremium) {
+      final indexReceita = _receitas.indexOf(receita);
+      if (indexReceita >= 120) {
+        _showEditBlockedPaywall();
+        return;
+      }
+    }
+
     final result = await Navigator.push<bool>(
       context,
       MaterialPageRoute(
@@ -156,19 +168,115 @@ class _ReceitasPageState extends State<ReceitasPage> {
     }
   }
 
+  void _showEditBlockedPaywall() {
+    showPaywall(
+      context,
+      title: 'Edição Bloqueada',
+      subtitle: 'Você atingiu o limite de 120 receitas no plano Free. Assine Premium para editar todas as suas receitas!',
+      onUpgrade: () async {
+        Navigator.pop(context);
+        await _activatePremium();
+      },
+      onRestore: () async {
+        Navigator.pop(context);
+        await _restorePremium();
+      },
+    );
+  }
+
   void _exportarReceitas() {
     if (!_isPremium) {
       _showExportPaywall();
       return;
     }
 
-    // TODO: Implementar exportação CSV/PDF
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('🚧 Funcionalidade de exportação em desenvolvimento'),
-        backgroundColor: Colors.orange,
+    _showExportDialog();
+  }
+
+  void _showExportDialog() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Exportar Receitas'),
+        content: const Text('Escolha o formato de exportação:'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(ctx);
+              await _exportCSV();
+            },
+            child: const Text('CSV'),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(ctx);
+              await _exportPDF();
+            },
+            child: const Text('PDF'),
+          ),
+        ],
       ),
     );
+  }
+
+  Future<void> _exportCSV() async {
+    try {
+      await _exportService.exportToCSV(
+        _receitas,
+        mes: _mesFiltro,
+        ano: _anoSelecionado,
+      );
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('✅ CSV exportado com sucesso!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erro ao exportar CSV: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _exportPDF() async {
+    try {
+      await _exportService.exportToPDF(
+        _receitas,
+        mes: _mesFiltro,
+        ano: _anoSelecionado,
+      );
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('✅ PDF exportado com sucesso!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erro ao exportar PDF: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   void _showExportPaywall() {
@@ -176,11 +284,70 @@ class _ReceitasPageState extends State<ReceitasPage> {
       context,
       title: 'Exportação Premium',
       subtitle: 'Exporte suas receitas em CSV ou PDF para enviar ao contador!',
-      onUpgrade: () {
+      onUpgrade: () async {
         Navigator.pop(context);
-        // TODO: Navegar para tela de compra ou ativar premium
+        await _activatePremium();
+      },
+      onRestore: () async {
+        Navigator.pop(context);
+        await _restorePremium();
       },
     );
+  }
+
+  Future<void> _activatePremium() async {
+    try {
+      final entitlements = await _entitlementsRepo.getEntitlements();
+      final newEntitlements = entitlements.copyWith(
+        isPremium: true,
+        dataCompra: DateTime.now(),
+      );
+      await _entitlementsRepo.setEntitlements(newEntitlements);
+      
+      if (mounted) {
+        setState(() {
+          _isPremium = true;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('✅ Premium ativado! (modo desenvolvimento)'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro ao ativar Premium: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _restorePremium() async {
+    try {
+      final restored = await _entitlementsRepo.restorePurchase();
+      if (mounted) {
+        if (restored) {
+          setState(() {
+            _isPremium = true;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Premium restaurado!')),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Nenhuma compra encontrada')),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro: $e')),
+        );
+      }
+    }
   }
 
   String _formatCurrency(double value) {
@@ -207,20 +374,22 @@ class _ReceitasPageState extends State<ReceitasPage> {
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
             child: _isPremium
                 ? Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
+                      color: Colors.grey.shade200,
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: DropdownButton<int>(
                       value: _anoSelecionado,
                       dropdownColor: Theme.of(context).colorScheme.surface,
                       underline: Container(),
-                      icon: const Icon(Icons.arrow_drop_down, color: Colors.white),
+                      icon: Icon(Icons.arrow_drop_down, color: Colors.grey.shade600),
                       style: const TextStyle(
-                        color: Colors.white,
+                        color: Colors.black87,
                         fontWeight: FontWeight.bold,
-                        fontSize: 16,
                       ),
                       items: anosDisponiveis.map((ano) {
                         return DropdownMenuItem(

@@ -1,5 +1,6 @@
 import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'domain/repositories/receita_repository.dart';
 import 'domain/repositories/settings_repository.dart';
 import 'domain/repositories/entitlements_repository.dart';
@@ -7,6 +8,9 @@ import 'data/repositories/local_receita_repository.dart';
 import 'data/repositories/local_settings_repository.dart';
 import 'data/repositories/local_entitlements_repository.dart';
 import 'data/services/alert_service.dart';
+import 'data/services/export_service.dart';
+import 'data/services/supabase_service.dart';
+import 'config/supabase_config.dart';
 import 'domain/usecases/add_receita_usecase.dart';
 import 'domain/usecases/update_receita_usecase.dart';
 import 'domain/usecases/get_dashboard_usecase.dart';
@@ -38,6 +42,23 @@ Future<void> setupServiceLocator() async {
   getIt.registerSingleton<AlertService>(
     AlertService(prefs: prefs),
   );
+
+  getIt.registerSingleton<ExportService>(
+    ExportService(),
+  );
+
+  // Supabase Service (apenas se configurado)
+  if (SupabaseConfig.isConfigured) {
+    // Inicializar Supabase
+    await Supabase.initialize(
+      url: SupabaseConfig.supabaseUrl,
+      anonKey: SupabaseConfig.supabaseAnonKey,
+    );
+    
+    getIt.registerSingleton<SupabaseService>(
+      SupabaseService(Supabase.instance.client),
+    );
+  }
 
   // UseCases
   getIt.registerSingleton<AddReceitaUseCase>(

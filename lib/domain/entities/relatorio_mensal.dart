@@ -8,6 +8,7 @@ class RelatorioMensal {
   final DateTime? dataMaiorLancamento;
   final Map<int, double> totalPorSemana; // semana (1-5) -> total
   final List<DiaComTotal> top5Dias;
+  final DiaComTotal? diaDePico; // Dia com maior faturamento
 
   RelatorioMensal({
     required this.ano,
@@ -19,6 +20,7 @@ class RelatorioMensal {
     this.dataMaiorLancamento,
     required this.totalPorSemana,
     required this.top5Dias,
+    this.diaDePico,
   });
 
   double get percentualDoLimite => 0.0; // Será calculado com o limite

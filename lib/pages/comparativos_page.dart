@@ -12,18 +12,19 @@ class ComparativosPage extends StatefulWidget {
   State<ComparativosPage> createState() => _ComparativosPageState();
 }
 
-class _ComparativosPageState extends State<ComparativosPage> with SingleTickerProviderStateMixin {
+class _ComparativosPageState extends State<ComparativosPage>
+    with SingleTickerProviderStateMixin {
   late GetComparativosUseCase _getComparativos;
   late EntitlementsRepository _entitlementsRepo;
   late TabController _tabController;
 
   bool _loading = true;
   bool _isPremium = false;
-  
+
   ComparativoMensal? _comparativoMensal;
   ComparativoAnual? _comparativoAnual;
   MetaRitmo? _metaRitmo;
-  
+
   int _anoSelecionado = DateTime.now().year;
   int _mesSelecionado = DateTime.now().month;
 
@@ -44,24 +45,29 @@ class _ComparativosPageState extends State<ComparativosPage> with SingleTickerPr
 
   Future<void> _checkPremiumAndLoad() async {
     final isPremium = await _entitlementsRepo.isPremiumActive();
-    
+
     if (!isPremium) {
       _showPaywall();
       return;
     }
-    
+
     setState(() => _isPremium = true);
     await _loadComparativos();
   }
 
   Future<void> _loadComparativos() async {
     setState(() => _loading = true);
-    
+
     try {
-      final comparativoMensal = await _getComparativos.compararMeses(_anoSelecionado, _mesSelecionado);
-      final comparativoAnual = await _getComparativos.compararAnos(_anoSelecionado);
+      final comparativoMensal = await _getComparativos.compararMeses(
+        _anoSelecionado,
+        _mesSelecionado,
+      );
+      final comparativoAnual = await _getComparativos.compararAnos(
+        _anoSelecionado,
+      );
       final metaRitmo = await _getComparativos.getMetaRitmo(_anoSelecionado);
-      
+
       if (mounted) {
         setState(() {
           _comparativoMensal = comparativoMensal;
@@ -73,9 +79,9 @@ class _ComparativosPageState extends State<ComparativosPage> with SingleTickerPr
     } catch (e) {
       if (mounted) {
         setState(() => _loading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Erro: $e')));
       }
     }
   }
@@ -108,8 +114,18 @@ class _ComparativosPageState extends State<ComparativosPage> with SingleTickerPr
 
   String _getNomeMes(int mes) {
     const meses = [
-      'Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun',
-      'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'
+      'Jan',
+      'Fev',
+      'Mar',
+      'Abr',
+      'Mai',
+      'Jun',
+      'Jul',
+      'Ago',
+      'Set',
+      'Out',
+      'Nov',
+      'Dez',
     ];
     return meses[mes - 1];
   }
@@ -117,9 +133,7 @@ class _ComparativosPageState extends State<ComparativosPage> with SingleTickerPr
   @override
   Widget build(BuildContext context) {
     if (!_isPremium) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     return Scaffold(
@@ -155,6 +169,8 @@ class _ComparativosPageState extends State<ComparativosPage> with SingleTickerPr
     final comp = _comparativoMensal!;
     final isPositivo = comp.isPositivo;
     final cor = isPositivo ? Colors.green : Colors.red;
+    final corFundo = isPositivo ? Colors.green.shade50 : Colors.red.shade50;
+    final corTexto = isPositivo ? Colors.green.shade800 : Colors.red.shade800;
     final seta = isPositivo ? '↑' : '↓';
 
     return RefreshIndicator(
@@ -177,7 +193,7 @@ class _ComparativosPageState extends State<ComparativosPage> with SingleTickerPr
 
           // Delta grande
           Card(
-            color: cor.withOpacity(0.1),
+            color: corFundo,
             child: Padding(
               padding: const EdgeInsets.all(24),
               child: Column(
@@ -187,7 +203,7 @@ class _ComparativosPageState extends State<ComparativosPage> with SingleTickerPr
                     style: TextStyle(
                       fontSize: 32,
                       fontWeight: FontWeight.bold,
-                      color: cor,
+                      color: corTexto,
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -197,7 +213,7 @@ class _ComparativosPageState extends State<ComparativosPage> with SingleTickerPr
                         : 'Novo faturamento',
                     style: TextStyle(
                       fontSize: 20,
-                      color: cor,
+                      color: corTexto,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -225,8 +241,8 @@ class _ComparativosPageState extends State<ComparativosPage> with SingleTickerPr
                   Text(
                     'Detalhes',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const Divider(),
                   _buildLinhaComparativo(
@@ -257,6 +273,8 @@ class _ComparativosPageState extends State<ComparativosPage> with SingleTickerPr
     final comp = _comparativoAnual!;
     final isPositivo = comp.isPositivo;
     final cor = isPositivo ? Colors.green : Colors.red;
+    final corFundo = isPositivo ? Colors.green.shade50 : Colors.red.shade50;
+    final corTexto = isPositivo ? Colors.green.shade800 : Colors.red.shade800;
     final seta = isPositivo ? '↑' : '↓';
 
     return RefreshIndicator(
@@ -266,7 +284,7 @@ class _ComparativosPageState extends State<ComparativosPage> with SingleTickerPr
         children: [
           // Delta anual
           Card(
-            color: cor.withOpacity(0.1),
+            color: corFundo,
             child: Padding(
               padding: const EdgeInsets.all(24),
               child: Column(
@@ -276,7 +294,7 @@ class _ComparativosPageState extends State<ComparativosPage> with SingleTickerPr
                     style: TextStyle(
                       fontSize: 32,
                       fontWeight: FontWeight.bold,
-                      color: cor,
+                      color: corTexto,
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -286,7 +304,7 @@ class _ComparativosPageState extends State<ComparativosPage> with SingleTickerPr
                         : 'Primeiro ano',
                     style: TextStyle(
                       fontSize: 20,
-                      color: cor,
+                      color: corTexto,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -311,8 +329,8 @@ class _ComparativosPageState extends State<ComparativosPage> with SingleTickerPr
                   Text(
                     'Por Mês',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const Divider(),
                   ...List.generate(12, (index) {
@@ -323,7 +341,7 @@ class _ComparativosPageState extends State<ComparativosPage> with SingleTickerPr
                     final deltaMes = compMes.delta;
                     final setaMes = deltaMes >= 0 ? '↑' : '↓';
                     final corMes = deltaMes >= 0 ? Colors.green : Colors.red;
-                    
+
                     return Padding(
                       padding: const EdgeInsets.symmetric(vertical: 8),
                       child: Row(
@@ -332,7 +350,9 @@ class _ComparativosPageState extends State<ComparativosPage> with SingleTickerPr
                             width: 40,
                             child: Text(
                               _getNomeMes(mes),
-                              style: const TextStyle(fontWeight: FontWeight.bold),
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ),
                           Expanded(
@@ -369,8 +389,11 @@ class _ComparativosPageState extends State<ComparativosPage> with SingleTickerPr
 
     final meta = _metaRitmo!;
     final cor = meta.acimaDoRitmo ? Colors.orange : Colors.green;
-    final statusTexto = meta.acimaDoRitmo 
-        ? 'Acima do ritmo ideal' 
+    final corFundo = meta.acimaDoRitmo
+        ? Colors.orange.shade50
+        : Colors.green.shade50;
+    final statusTexto = meta.acimaDoRitmo
+        ? 'Acima do ritmo ideal'
         : 'Dentro do ritmo ideal';
 
     return RefreshIndicator(
@@ -379,7 +402,7 @@ class _ComparativosPageState extends State<ComparativosPage> with SingleTickerPr
         padding: const EdgeInsets.all(16),
         children: [
           Card(
-            color: cor.withOpacity(0.1),
+            color: corFundo,
             child: Padding(
               padding: const EdgeInsets.all(24),
               child: Column(
@@ -387,7 +410,7 @@ class _ComparativosPageState extends State<ComparativosPage> with SingleTickerPr
                   Icon(
                     meta.acimaDoRitmo ? Icons.trending_up : Icons.check_circle,
                     size: 64,
-                    color: cor,
+                    color: cor.shade700,
                   ),
                   const SizedBox(height: 16),
                   Text(
@@ -395,7 +418,7 @@ class _ComparativosPageState extends State<ComparativosPage> with SingleTickerPr
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
-                      color: cor,
+                      color: meta.acimaDoRitmo ? Colors.orange.shade800 : Colors.green.shade800,
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -414,8 +437,8 @@ class _ComparativosPageState extends State<ComparativosPage> with SingleTickerPr
                   Text(
                     'Análise',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const Divider(),
                   _buildLinhaComparativo(
@@ -450,8 +473,8 @@ class _ComparativosPageState extends State<ComparativosPage> with SingleTickerPr
                   Text(
                     'Explicação',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const SizedBox(height: 12),
                   Text(
@@ -463,9 +486,9 @@ class _ComparativosPageState extends State<ComparativosPage> with SingleTickerPr
                   Text(
                     meta.acimaDoRitmo
                         ? '⚠️ Você está faturando ${_formatCurrency(meta.mediaAtual)} por mês (${meta.porcentagemDoRitmo.toStringAsFixed(0)}% do ritmo ideal). '
-                          'Considere reduzir o ritmo nos próximos meses para não estourar o limite.'
+                              'Considere reduzir o ritmo nos próximos meses para não estourar o limite.'
                         : '✅ Você está faturando ${_formatCurrency(meta.mediaAtual)} por mês (${meta.porcentagemDoRitmo.toStringAsFixed(0)}% do ritmo ideal). '
-                          'Continue neste ritmo para ficar dentro do limite!',
+                              'Continue neste ritmo para ficar dentro do limite!',
                     style: TextStyle(
                       fontSize: 14,
                       color: cor,

@@ -21,7 +21,10 @@ class GetDashboardUseCase {
     final isPremium = await entitlementsRepo.isPremiumActive();
 
     final totalAno = (await receitaRepo.sumByYear(year)).toDouble();
-    final totalMes = (await receitaRepo.sumByYearMonth(year, DateTime.now().month)).toDouble();
+    final totalMes = (await receitaRepo.sumByYearMonth(
+      year,
+      DateTime.now().month,
+    )).toDouble();
     final countReceitas = await receitaRepo.countByYear(year);
 
     // Usar limite específico do ano se existir, senão usar limite padrão
@@ -47,11 +50,21 @@ class GetDashboardUseCase {
   }
 
   String _calculateStatus(double percentual, bool isPremium) {
-    if (percentual >= 1.0) return 'LIMITE_ESTOURADO';
-    if (percentual >= 0.9) return 'CRITICO';
-    if (percentual >= 0.7 && !isPremium) return 'ALERTA'; // FREE só vê em 90%
-    if (percentual >= 0.7) return 'ATENCAO'; // PREMIUM vê em 70%
-    return 'OK';
+    if (percentual >= 1.0) return 'LIMITE_ESTOURADO'; // 100%+
+
+    if (isPremium) {
+      // PREMIUM: Níveis mais detalhados
+      if (percentual >= 0.95) return 'ALERTA_95'; // 95-99%
+      if (percentual >= 0.90) return 'ALERTA_90'; // 90-94%
+      if (percentual >= 0.80) return 'ALERTA_80'; // 80-89%
+      if (percentual >= 0.70) return 'ALERTA_70'; // 70-79%
+    } else {
+      // FREE: Níveis simplificados (mas com cores do premium)
+      if (percentual >= 0.95) return 'ALERTA_95'; // 95-99%
+      if (percentual >= 0.90) return 'ALERTA_90'; // 90-94%
+    }
+
+    return 'OK'; // < 70% (premium) ou < 90% (free)
   }
 }
 

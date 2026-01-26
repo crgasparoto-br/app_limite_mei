@@ -19,7 +19,7 @@ class _RelatorioMensalPageState extends State<RelatorioMensalPage> {
   RelatorioMensal? _relatorio;
   bool _loading = true;
   bool _isPremium = false;
-  
+
   int _anoSelecionado = DateTime.now().year;
   int _mesSelecionado = DateTime.now().month;
 
@@ -33,19 +33,19 @@ class _RelatorioMensalPageState extends State<RelatorioMensalPage> {
 
   Future<void> _checkPremiumAndLoad() async {
     final isPremium = await _entitlementsRepo.isPremiumActive();
-    
+
     if (!isPremium) {
       _showPaywall();
       return;
     }
-    
+
     setState(() => _isPremium = true);
     await _loadRelatorio();
   }
 
   Future<void> _loadRelatorio() async {
     setState(() => _loading = true);
-    
+
     try {
       final relatorio = await _getRelatorio(_anoSelecionado, _mesSelecionado);
       if (mounted) {
@@ -57,9 +57,9 @@ class _RelatorioMensalPageState extends State<RelatorioMensalPage> {
     } catch (e) {
       if (mounted) {
         setState(() => _loading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Erro: $e')));
       }
     }
   }
@@ -92,19 +92,33 @@ class _RelatorioMensalPageState extends State<RelatorioMensalPage> {
 
   String _getNomeMes(int mes) {
     const meses = [
-      'Janeiro', 'Fevereiro', 'Março', 'Abril',
-      'Maio', 'Junho', 'Julho', 'Agosto',
-      'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+      'Jan',
+      'Fev',
+      'Mar',
+      'Abr',
+      'Mai',
+      'Junho',
+      'Jul',
+      'Ago',
+      'Set',
+      'Out',
+      'Nov',
+      'Dez',
     ];
     return meses[mes - 1];
+  }
+
+  String _formatData(DateTime data) {
+    final dia = data.day.toString().padLeft(2, '0');
+    final mes = data.month.toString().padLeft(2, '0');
+    final ano = data.year;
+    return '$dia/$mes/$ano';
   }
 
   @override
   Widget build(BuildContext context) {
     if (!_isPremium) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     return Scaffold(
@@ -114,23 +128,33 @@ class _RelatorioMensalPageState extends State<RelatorioMensalPage> {
           // Seletor de Mês/Ano
           Padding(
             padding: const EdgeInsets.only(right: 16),
-            child: DropdownButton<String>(
-              value: '$_anoSelecionado-$_mesSelecionado',
-              dropdownColor: Theme.of(context).colorScheme.surface,
-              underline: Container(),
-              icon: const Icon(Icons.calendar_month, color: Colors.white),
-              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-              items: _buildMesAnoItems(),
-              onChanged: (value) {
-                if (value != null) {
-                  final parts = value.split('-');
-                  setState(() {
-                    _anoSelecionado = int.parse(parts[0]);
-                    _mesSelecionado = int.parse(parts[1]);
-                  });
-                  _loadRelatorio();
-                }
-              },
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade200,
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: DropdownButton<String>(
+                value: '$_anoSelecionado-$_mesSelecionado',
+                dropdownColor: Theme.of(context).colorScheme.surface,
+                underline: Container(),
+                icon: Icon(Icons.arrow_drop_down, color: Colors.grey.shade600),
+                style: const TextStyle(
+                  color: Colors.black87,
+                  fontWeight: FontWeight.bold,
+                ),
+                items: _buildMesAnoItems(),
+                onChanged: (value) {
+                  if (value != null) {
+                    final parts = value.split('-');
+                    setState(() {
+                      _anoSelecionado = int.parse(parts[0]);
+                      _mesSelecionado = int.parse(parts[1]);
+                    });
+                    _loadRelatorio();
+                  }
+                },
+              ),
             ),
           ),
         ],
@@ -138,56 +162,58 @@ class _RelatorioMensalPageState extends State<RelatorioMensalPage> {
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _relatorio == null
-              ? const Center(child: Text('Erro ao carregar relatório'))
-              : RefreshIndicator(
-                  onRefresh: _loadRelatorio,
-                  child: ListView(
-                    padding: const EdgeInsets.all(16),
-                    children: [
-                      // Título do mês
-                      Text(
-                        '${_getNomeMes(_mesSelecionado)} de $_anoSelecionado',
-                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
-                      ),
-                      const SizedBox(height: 24),
-
-                      // Cards principais
-                      _buildCardsResumo(),
-                      const SizedBox(height: 24),
-
-                      // Seção por semana
-                      _buildSecaoPorSemana(),
-                      const SizedBox(height: 24),
-
-                      // Top 5 dias
-                      _buildTop5Dias(),
-                    ],
+          ? const Center(child: Text('Erro ao carregar relatório'))
+          : RefreshIndicator(
+              onRefresh: _loadRelatorio,
+              child: ListView(
+                padding: const EdgeInsets.all(16),
+                children: [
+                  // Título do mês
+                  Text(
+                    '${_getNomeMes(_mesSelecionado)} de $_anoSelecionado',
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                ),
+                  const SizedBox(height: 24),
+
+                  // Cards principais
+                  _buildCardsResumo(),
+                  const SizedBox(height: 24),
+
+                  // Seção por semana
+                  _buildSecaoPorSemana(),
+                  const SizedBox(height: 24),
+
+                  // Top 5 dias
+                  _buildTop5Dias(),
+                ],
+              ),
+            ),
     );
   }
 
   List<DropdownMenuItem<String>> _buildMesAnoItems() {
     final items = <DropdownMenuItem<String>>[];
     final now = DateTime.now();
-    
+
     // Últimos 12 meses
     for (int i = 0; i < 12; i++) {
       final data = DateTime(now.year, now.month - i, 1);
-      items.add(DropdownMenuItem(
-        value: '${data.year}-${data.month}',
-        child: Text('${_getNomeMes(data.month)}/${data.year}'),
-      ));
+      items.add(
+        DropdownMenuItem(
+          value: '${data.year}-${data.month}',
+          child: Text('${_getNomeMes(data.month)}/${data.year}'),
+        ),
+      );
     }
-    
+
     return items;
   }
 
   Widget _buildCardsResumo() {
     final relatorio = _relatorio!;
-    
+
     return Column(
       children: [
         Row(
@@ -236,10 +262,60 @@ class _RelatorioMensalPageState extends State<RelatorioMensalPage> {
         if (relatorio.dataMaiorLancamento != null) ...[
           const SizedBox(height: 8),
           Text(
-            'Maior lançamento em ${relatorio.dataMaiorLancamento!.day}/${relatorio.dataMaiorLancamento!.month}',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Colors.grey.shade600,
-                ),
+            'Maior lançamento em ${_formatData(relatorio.dataMaiorLancamento!)}',
+
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: Colors.grey.shade600),
+          ),
+        ],
+        if (relatorio.diaDePico != null) ...[
+          const SizedBox(height: 16),
+          Card(
+            color: Colors.amber.shade50,
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.emoji_events,
+                    color: Colors.amber.shade700,
+                    size: 28,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '🏆 Dia de Pico',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.amber.shade900,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '${_formatData(relatorio.diaDePico!.data)} - ${_formatCurrency(relatorio.diaDePico!.total)}',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.amber.shade800,
+                          ),
+                        ),
+                        Text(
+                          '${relatorio.diaDePico!.qtdLancamentos} lançamento(s)',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey.shade700,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
         ],
       ],
@@ -262,8 +338,8 @@ class _RelatorioMensalPageState extends State<RelatorioMensalPage> {
                   child: Text(
                     label,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Colors.grey.shade600,
-                        ),
+                      color: Colors.grey.shade600,
+                    ),
                   ),
                 ),
               ],
@@ -271,9 +347,9 @@ class _RelatorioMensalPageState extends State<RelatorioMensalPage> {
             const SizedBox(height: 8),
             Text(
               valor,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
           ],
         ),
@@ -283,12 +359,14 @@ class _RelatorioMensalPageState extends State<RelatorioMensalPage> {
 
   Widget _buildSecaoPorSemana() {
     final relatorio = _relatorio!;
-    
+
     if (relatorio.totalPorSemana.isEmpty) {
       return const SizedBox.shrink();
     }
 
-    final maxTotal = relatorio.totalPorSemana.values.isEmpty ? 0.0 : relatorio.totalPorSemana.values.reduce((a, b) => a > b ? a : b);
+    final maxTotal = relatorio.totalPorSemana.values.isEmpty
+        ? 0.0
+        : relatorio.totalPorSemana.values.reduce((a, b) => a > b ? a : b);
 
     return Card(
       child: Padding(
@@ -298,16 +376,18 @@ class _RelatorioMensalPageState extends State<RelatorioMensalPage> {
           children: [
             Text(
               'Por Semana',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
             ...List.generate(5, (index) {
               final semana = index + 1;
               final total = relatorio.totalPorSemana[semana] ?? 0;
-              final percentual = maxTotal > 0 ? (total / maxTotal).toDouble() : 0.0;
-              
+              final percentual = maxTotal > 0
+                  ? (total / maxTotal).toDouble()
+                  : 0.0;
+
               return Padding(
                 padding: const EdgeInsets.only(bottom: 12),
                 child: Column(
@@ -330,7 +410,9 @@ class _RelatorioMensalPageState extends State<RelatorioMensalPage> {
                         value: percentual,
                         minHeight: 8,
                         backgroundColor: Colors.grey.shade200,
-                        valueColor: AlwaysStoppedAnimation(Colors.blue.shade400),
+                        valueColor: AlwaysStoppedAnimation(
+                          Colors.blue.shade400,
+                        ),
                       ),
                     ),
                   ],
@@ -345,7 +427,7 @@ class _RelatorioMensalPageState extends State<RelatorioMensalPage> {
 
   Widget _buildTop5Dias() {
     final relatorio = _relatorio!;
-    
+
     if (relatorio.top5Dias.isEmpty) {
       return const SizedBox.shrink();
     }
@@ -363,8 +445,8 @@ class _RelatorioMensalPageState extends State<RelatorioMensalPage> {
                 Text(
                   'Top 5 Dias',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ],
             ),
@@ -372,10 +454,12 @@ class _RelatorioMensalPageState extends State<RelatorioMensalPage> {
             ...relatorio.top5Dias.asMap().entries.map((entry) {
               final index = entry.key;
               final dia = entry.value;
-              
+
               return ListTile(
                 leading: CircleAvatar(
-                  backgroundColor: index == 0 ? Colors.amber : Colors.blue.shade100,
+                  backgroundColor: index == 0
+                      ? Colors.amber
+                      : Colors.blue.shade100,
                   child: Text(
                     '${index + 1}º',
                     style: TextStyle(
@@ -385,7 +469,7 @@ class _RelatorioMensalPageState extends State<RelatorioMensalPage> {
                   ),
                 ),
                 title: Text(
-                  '${dia.data.day}/${dia.data.month}/${dia.data.year}',
+                  _formatData(dia.data),
                   style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
                 subtitle: Text('${dia.qtdLancamentos} lançamento(s)'),
