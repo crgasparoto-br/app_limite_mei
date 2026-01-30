@@ -25,8 +25,8 @@ class _ComparativosPageState extends State<ComparativosPage>
   ComparativoAnual? _comparativoAnual;
   MetaRitmo? _metaRitmo;
 
-  int _anoSelecionado = DateTime.now().year;
-  int _mesSelecionado = DateTime.now().month;
+  final int _anoSelecionado = DateTime.now().year;
+  final int _mesSelecionado = DateTime.now().month;
 
   @override
   void initState() {

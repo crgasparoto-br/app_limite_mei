@@ -8,6 +8,7 @@ import '../config/supabase_config.dart';
 import '../service_locator.dart';
 import '../presentation/widgets/paywall_dialog.dart';
 import '../data/services/supabase_service.dart';
+import '../widgets/currency_input_formatter.dart';
 import 'backup_page.dart';
 
 class ConfiguracoesPage extends StatefulWidget {
@@ -100,6 +101,33 @@ class _ConfiguracoesPageState extends State<ConfiguracoesPage> {
       return;
     }
     setState(() => _anoSelecionado = ano);
+  }
+
+  String _formatarValorParaInput(double valor) {
+    // Converte para centavos
+    final centavos = (valor * 100).round();
+    final texto = centavos.toString().padLeft(3, '0');
+    
+    // Separa parte inteira e decimal
+    final parteDecimal = texto.substring(texto.length - 2);
+    var parteInteira = texto.substring(0, texto.length - 2);
+    
+    // Adiciona separador de milhares
+    if (parteInteira.length > 3) {
+      final buffer = StringBuffer();
+      var count = 0;
+      for (var i = parteInteira.length - 1; i >= 0; i--) {
+        if (count == 3) {
+          buffer.write('.');
+          count = 0;
+        }
+        buffer.write(parteInteira[i]);
+        count++;
+      }
+      parteInteira = buffer.toString().split('').reversed.join();
+    }
+    
+    return '$parteInteira,$parteDecimal';
   }
 
   void _showAnosAnterioresPaywall() {
@@ -294,13 +322,17 @@ class _ConfiguracoesPageState extends State<ConfiguracoesPage> {
                           key: ValueKey(
                             _anoSelecionado,
                           ), // Força rebuild ao mudar ano
-                          initialValue: _settings
-                              .getLimitePorAno(_anoSelecionado)
-                              .toStringAsFixed(2),
+                          initialValue: _formatarValorParaInput(
+                            _settings.getLimitePorAno(_anoSelecionado),
+                          ),
+                          inputFormatters: [BrCurrencyInputFormatter()],
+                          keyboardType: TextInputType.number,
                           onFieldSubmitted: (value) {
-                            final parsed = double.tryParse(
-                              value.replaceAll(',', '.'),
-                            );
+                            // Remove formatação e converte para double
+                            final numerico = value
+                                .replaceAll('.', '')
+                                .replaceAll(',', '.');
+                            final parsed = double.tryParse(numerico);
                             if (parsed != null && parsed > 0) {
                               _saveLimite(parsed);
                             }

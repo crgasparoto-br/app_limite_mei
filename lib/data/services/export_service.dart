@@ -42,9 +42,9 @@ class ExportService {
     // Salvar arquivo
     final directory = await getApplicationDocumentsDirectory();
     final fileName = mes != null && ano != null
-        ? 'receitas_${mes}_${ano}.csv'
+        ? 'receitas_${mes}_$ano.csv'
         : ano != null
-            ? 'receitas_${ano}.csv'
+            ? 'receitas_$ano.csv'
             : 'receitas.csv';
     final file = File('${directory.path}/$fileName');
     await file.writeAsString(buffer.toString());
@@ -192,9 +192,9 @@ class ExportService {
     // Salvar arquivo
     final directory = await getApplicationDocumentsDirectory();
     final fileName = mes != null && ano != null
-        ? 'receitas_${mes}_${ano}.pdf'
+        ? 'receitas_${mes}_$ano.pdf'
         : ano != null
-            ? 'receitas_${ano}.pdf'
+            ? 'receitas_$ano.pdf'
             : 'receitas.pdf';
     final file = File('${directory.path}/$fileName');
     await file.writeAsBytes(await pdf.save());
