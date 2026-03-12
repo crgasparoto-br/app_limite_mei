@@ -109,9 +109,9 @@ O arquivo será gerado em: `build/app/outputs/flutter-apk/app-release.apk`
 
 Antes de enviar para a Google Play Console:
 
-- [ ] Keystore criado e configurado
-- [ ] Arquivo key.properties atualizado com senhas corretas
-- [ ] Build de release gerado com sucesso
+- [x] Keystore criado e configurado
+- [x] Arquivo key.properties atualizado com senhas corretas
+- [x] Build de release gerado com sucesso
 - [ ] App testado em dispositivo real
 - [ ] Descrição do app preparada (curta e longa)
 - [ ] Screenshots preparados (mínimo 2, até 8)
