@@ -7,7 +7,7 @@
 - Este é o identificador único do app na Google Play Store
 
 ### 2. **Signing Configuration**
-- Criado arquivo `android/key.properties` para configuração de assinatura
+- Configurada leitura de `android/key.properties` para assinatura de release (arquivo local, não versionado)
 - Configurado build.gradle.kts para usar signing config em release
 - Adicionadas regras ProGuard para otimização e proteção do código
 
@@ -69,15 +69,22 @@ Durante a criação, você será solicitado a fornecer:
 - Nome, organização, cidade, estado, país
 - Senha da chave (pode ser a mesma do keystore)
 
-### 2. Atualizar o arquivo `android/key.properties`:
+### 2. Criar/atualizar o arquivo `android/key.properties`:
 
-Após criar o keystore, edite o arquivo `android/key.properties` com as informações reais:
+Após criar o keystore, copie `android/key.properties.example` para `android/key.properties` e preencha os valores reais:
 
 ```properties
 storePassword=SUA_SENHA_KEYSTORE
 keyPassword=SUA_SENHA_KEY
 keyAlias=upload
 storeFile=upload-keystore.jks
+```
+
+
+### 2.1 Usar template seguro (recomendado):
+
+```bash
+cp android/key.properties.example android/key.properties
 ```
 
 ⚠️ **IMPORTANTE**: 
@@ -109,9 +116,9 @@ O arquivo será gerado em: `build/app/outputs/flutter-apk/app-release.apk`
 
 Antes de enviar para a Google Play Console:
 
-- [x] Keystore criado e configurado
-- [x] Arquivo key.properties atualizado com senhas corretas
-- [x] Build de release gerado com sucesso
+- [ ] Keystore criado e configurado
+- [ ] Arquivo key.properties atualizado com senhas corretas
+- [ ] Build de release gerado com sucesso
 - [ ] App testado em dispositivo real
 - [ ] Descrição do app preparada (curta e longa)
 - [ ] Screenshots preparados (mínimo 2, até 8)
@@ -122,6 +129,9 @@ Antes de enviar para a Google Play Console:
 - [ ] Preço e distribuição configurados
 
 ---
+
+
+> ℹ️ **Status real do projeto no repositório:** os itens acima só devem ser marcados como concluídos depois de validar localmente com os arquivos/artefatos gerados (`android/key.properties`, `android/upload-keystore.jks` e `build/app/outputs/bundle/release/app-release.aab`).
 
 ## 🌐 Google Play Console
 
