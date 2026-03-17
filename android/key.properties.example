@@ -1,0 +1,7 @@
+# Copie este arquivo para android/key.properties e preencha com seus dados reais.
+# NUNCA versione o arquivo key.properties com senhas reais.
+
+storePassword=COLOQUE_SENHA_DO_KEYSTORE
+keyPassword=COLOQUE_SENHA_DA_CHAVE
+keyAlias=upload
+storeFile=upload-keystore.jks
