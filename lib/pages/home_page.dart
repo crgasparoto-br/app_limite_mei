@@ -422,7 +422,7 @@ class _HomePageState extends State<HomePage> {
               boxShadow: data.canAddMore
                   ? [
                       BoxShadow(
-                        color: const Color(0xFF0b798b).withOpacity(0.3),
+                        color: const Color(0xFF0b798b).withValues(alpha: 0.3),
                         blurRadius: 8,
                         offset: const Offset(0, 4),
                       ),

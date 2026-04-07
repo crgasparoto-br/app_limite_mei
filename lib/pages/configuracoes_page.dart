@@ -84,11 +84,13 @@ class _ConfiguracoesPageState extends State<ConfiguracoesPage> {
       }
 
       await _settingsRepo.saveSettings(updated);
+      if (!mounted) return;
       setState(() => _settings = updated);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Limite de $_anoSelecionado atualizado!')),
       );
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text('Erro: $e')));
@@ -191,16 +193,16 @@ class _ConfiguracoesPageState extends State<ConfiguracoesPage> {
       );
       await _entitlementsRepo.setEntitlements(entitlements);
 
-      if (mounted) {
-        setState(() => _isPremium = true);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('✅ Premium ativado! (modo desenvolvimento)'),
-            backgroundColor: Colors.green,
-          ),
-        );
-      }
+      if (!mounted) return;
+      setState(() => _isPremium = true);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('✅ Premium ativado! (modo desenvolvimento)'),
+          backgroundColor: Colors.green,
+        ),
+      );
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text('Erro ao ativar Premium: $e')));
@@ -210,6 +212,7 @@ class _ConfiguracoesPageState extends State<ConfiguracoesPage> {
   Future<void> _restorePremium() async {
     try {
       final restored = await _entitlementsRepo.restorePurchase();
+      if (!mounted) return;
       if (restored) {
         setState(() => _isPremium = true);
         ScaffoldMessenger.of(
@@ -221,6 +224,7 @@ class _ConfiguracoesPageState extends State<ConfiguracoesPage> {
         );
       }
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text('Erro: $e')));
@@ -231,6 +235,7 @@ class _ConfiguracoesPageState extends State<ConfiguracoesPage> {
     // Método de desenvolvimento para resetar para plano FREE
     try {
       await _entitlementsRepo.resetToFree();
+      if (!mounted) return;
       setState(() => _isPremium = false);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -239,6 +244,7 @@ class _ConfiguracoesPageState extends State<ConfiguracoesPage> {
         ),
       );
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text('Erro: $e')));
@@ -671,6 +677,7 @@ class _ConfiguracoesPageState extends State<ConfiguracoesPage> {
     );
 
     if (confirmed != true) return;
+    if (!mounted) return;
 
     if (_supabaseService == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -695,26 +702,25 @@ class _ConfiguracoesPageState extends State<ConfiguracoesPage> {
       final settings = await _supabaseService!.restoreSettings();
       if (settings != null) {
         await _settingsRepo.saveSettings(settings);
+        if (!mounted) return;
         setState(() => _settings = settings);
       }
 
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('✅ Backup restaurado com sucesso.'),
-            backgroundColor: Colors.green,
-          ),
-        );
-      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('✅ Backup restaurado com sucesso.'),
+          backgroundColor: Colors.green,
+        ),
+      );
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Erro ao restaurar backup: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Erro ao restaurar backup: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 

@@ -135,6 +135,7 @@ class _ReceitasPageState extends State<ReceitasPage> {
       await _receitaRepo.deleteReceita(id);
       await _loadReceitas();
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Erro: $e')),
       );
@@ -158,13 +159,14 @@ class _ReceitasPageState extends State<ReceitasPage> {
       ),
     );
 
+    if (!mounted) return;
+
     if (result == true) {
       await _loadReceitas();
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Receita atualizada com sucesso')),
-        );
-      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Receita atualizada com sucesso')),
+      );
     }
   }
 

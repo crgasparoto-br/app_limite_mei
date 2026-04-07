@@ -168,7 +168,6 @@ class _ComparativosPageState extends State<ComparativosPage>
 
     final comp = _comparativoMensal!;
     final isPositivo = comp.isPositivo;
-    final cor = isPositivo ? Colors.green : Colors.red;
     final corFundo = isPositivo ? Colors.green.shade50 : Colors.red.shade50;
     final corTexto = isPositivo ? Colors.green.shade800 : Colors.red.shade800;
     final seta = isPositivo ? '↑' : '↓';
@@ -272,7 +271,6 @@ class _ComparativosPageState extends State<ComparativosPage>
 
     final comp = _comparativoAnual!;
     final isPositivo = comp.isPositivo;
-    final cor = isPositivo ? Colors.green : Colors.red;
     final corFundo = isPositivo ? Colors.green.shade50 : Colors.red.shade50;
     final corTexto = isPositivo ? Colors.green.shade800 : Colors.red.shade800;
     final seta = isPositivo ? '↑' : '↓';
