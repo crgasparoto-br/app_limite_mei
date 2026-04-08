@@ -52,6 +52,28 @@ class AlertService {
     return toAlert;
   }
 
+  /// Avalia thresholds respeitando os toggles configurados pelo usuário.
+  List<int> evaluateConfiguredThresholds(
+    double percentual,
+    Map<int, bool> alertasAtivos,
+    bool isPremium,
+    int year,
+  ) {
+    final allowedThresholds = getActiveThresholds(isPremium).where(
+      (threshold) => alertasAtivos[threshold] ?? false,
+    );
+    final toAlert = <int>[];
+    final percent = percentual * 100;
+
+    for (final threshold in allowedThresholds) {
+      if (percent >= threshold && shouldFireAlert(threshold, year)) {
+        toAlert.add(threshold);
+      }
+    }
+
+    return toAlert;
+  }
+
   /// Privado: Obtem flags de alertas enviados
   Map<String, dynamic> _getAlertFlags() {
     final json = prefs.getString(_alertFlagsKey) ?? '{}';

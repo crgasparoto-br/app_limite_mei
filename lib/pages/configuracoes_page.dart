@@ -1,15 +1,11 @@
-import 'package:flutter/material.dart';
-import '../domain/repositories/settings_repository.dart';
-import '../domain/repositories/entitlements_repository.dart';
-import '../domain/repositories/receita_repository.dart';
+﻿import 'package:flutter/material.dart';
+
 import '../domain/entities/app_settings.dart';
-import '../domain/entities/entitlements.dart';
-import '../config/supabase_config.dart';
-import '../service_locator.dart';
+import '../domain/repositories/entitlements_repository.dart';
+import '../domain/repositories/settings_repository.dart';
 import '../presentation/widgets/paywall_dialog.dart';
-import '../data/services/supabase_service.dart';
+import '../service_locator.dart';
 import '../widgets/currency_input_formatter.dart';
-import 'backup_page.dart';
 
 class ConfiguracoesPage extends StatefulWidget {
   const ConfiguracoesPage({super.key});
@@ -21,33 +17,18 @@ class ConfiguracoesPage extends StatefulWidget {
 class _ConfiguracoesPageState extends State<ConfiguracoesPage> {
   late SettingsRepository _settingsRepo;
   late EntitlementsRepository _entitlementsRepo;
-  SupabaseService? _supabaseService;
 
   late AppSettings _settings;
   bool _isPremium = false;
   bool _loading = true;
   int _anoSelecionado = DateTime.now().year;
-  bool _isAuthenticated = false;
-  DateTime? _ultimoBackup;
 
   @override
   void initState() {
     super.initState();
     _settingsRepo = getIt<SettingsRepository>();
     _entitlementsRepo = getIt<EntitlementsRepository>();
-    if (SupabaseConfig.isConfigured) {
-      _supabaseService = getIt<SupabaseService>();
-      _checkAuth();
-    }
     _loadSettings();
-  }
-
-  void _checkAuth() {
-    if (_supabaseService != null) {
-      setState(() {
-        _isAuthenticated = _supabaseService!.isAuthenticated;
-      });
-    }
   }
 
   Future<void> _loadSettings() async {
@@ -55,17 +36,15 @@ class _ConfiguracoesPageState extends State<ConfiguracoesPage> {
       final settings = await _settingsRepo.getSettings();
       final isPremium = await _entitlementsRepo.isPremiumActive();
 
-      if (mounted) {
-        setState(() {
-          _settings = settings;
-          _isPremium = isPremium;
-          _loading = false;
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() => _loading = false);
-      }
+      if (!mounted) return;
+      setState(() {
+        _settings = settings;
+        _isPremium = isPremium;
+        _loading = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _loading = false);
     }
   }
 
@@ -74,12 +53,10 @@ class _ConfiguracoesPageState extends State<ConfiguracoesPage> {
       AppSettings updated;
 
       if (_isPremium && _anoSelecionado != DateTime.now().year) {
-        // Premium: salvar limite específico para o ano selecionado
         final novosLimites = Map<int, double>.from(_settings.limitesPorAno);
         novosLimites[_anoSelecionado] = novoLimite;
         updated = _settings.copyWith(limitesPorAno: novosLimites);
       } else {
-        // FREE ou ano atual: salvar como limite padrão
         updated = _settings.copyWith(limiteAnual: novoLimite);
       }
 
@@ -106,15 +83,11 @@ class _ConfiguracoesPageState extends State<ConfiguracoesPage> {
   }
 
   String _formatarValorParaInput(double valor) {
-    // Converte para centavos
     final centavos = (valor * 100).round();
     final texto = centavos.toString().padLeft(3, '0');
-    
-    // Separa parte inteira e decimal
     final parteDecimal = texto.substring(texto.length - 2);
     var parteInteira = texto.substring(0, texto.length - 2);
-    
-    // Adiciona separador de milhares
+
     if (parteInteira.length > 3) {
       final buffer = StringBuffer();
       var count = 0;
@@ -128,14 +101,14 @@ class _ConfiguracoesPageState extends State<ConfiguracoesPage> {
       }
       parteInteira = buffer.toString().split('').reversed.join();
     }
-    
+
     return '$parteInteira,$parteDecimal';
   }
 
   void _showAnosAnterioresPaywall() {
     showPaywall(
       context,
-      title: 'Anos Anteriores - Premium',
+      title: 'Anos anteriores - Premium',
       subtitle:
           'Configure limites diferentes para cada ano e consulte o histórico completo!',
       onUpgrade: () async {
@@ -183,24 +156,23 @@ class _ConfiguracoesPageState extends State<ConfiguracoesPage> {
   }
 
   Future<void> _activatePremium() async {
-    // TODO: Integrar com Google Play Billing
-    // Por enquanto, ativa Premium localmente para testes
     try {
-      final entitlements = Entitlements(
-        isPremium: true,
-        dataCompra: DateTime.now(),
-        dataExpiracao: null, // Sem expiração (lifetime)
-      );
-      await _entitlementsRepo.setEntitlements(entitlements);
-
+      final purchased = await _entitlementsRepo.purchasePremium();
       if (!mounted) return;
-      setState(() => _isPremium = true);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('✅ Premium ativado! (modo desenvolvimento)'),
-          backgroundColor: Colors.green,
-        ),
-      );
+
+      if (purchased) {
+        setState(() => _isPremium = true);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Premium ativado com sucesso!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Compra cancelada.')),
+        );
+      }
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(
@@ -231,26 +203,6 @@ class _ConfiguracoesPageState extends State<ConfiguracoesPage> {
     }
   }
 
-  Future<void> _resetToFree() async {
-    // Método de desenvolvimento para resetar para plano FREE
-    try {
-      await _entitlementsRepo.resetToFree();
-      if (!mounted) return;
-      setState(() => _isPremium = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Resetado para plano FREE'),
-          backgroundColor: Colors.orange,
-        ),
-      );
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Erro: $e')));
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -260,7 +212,6 @@ class _ConfiguracoesPageState extends State<ConfiguracoesPage> {
           : ListView(
               padding: const EdgeInsets.all(16),
               children: [
-                // Limite Anual
                 Card(
                   child: Padding(
                     padding: const EdgeInsets.all(16),
@@ -271,11 +222,12 @@ class _ConfiguracoesPageState extends State<ConfiguracoesPage> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
-                              'Limite Anual',
-                              style: Theme.of(context).textTheme.titleMedium
+                              'Limite anual',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .titleMedium
                                   ?.copyWith(fontWeight: FontWeight.bold),
                             ),
-                            // Seletor de Ano (Premium)
                             if (_isPremium)
                               DropdownButton<int>(
                                 value: _anoSelecionado,
@@ -325,16 +277,13 @@ class _ConfiguracoesPageState extends State<ConfiguracoesPage> {
                         ),
                         const SizedBox(height: 12),
                         TextFormField(
-                          key: ValueKey(
-                            _anoSelecionado,
-                          ), // Força rebuild ao mudar ano
+                          key: ValueKey(_anoSelecionado),
                           initialValue: _formatarValorParaInput(
                             _settings.getLimitePorAno(_anoSelecionado),
                           ),
                           inputFormatters: [BrCurrencyInputFormatter()],
                           keyboardType: TextInputType.number,
                           onFieldSubmitted: (value) {
-                            // Remove formatação e converte para double
                             final numerico = value
                                 .replaceAll('.', '')
                                 .replaceAll(',', '.');
@@ -354,8 +303,6 @@ class _ConfiguracoesPageState extends State<ConfiguracoesPage> {
                   ),
                 ),
                 const SizedBox(height: 16),
-
-                // Alertas
                 Card(
                   child: Padding(
                     padding: const EdgeInsets.all(16),
@@ -364,22 +311,18 @@ class _ConfiguracoesPageState extends State<ConfiguracoesPage> {
                       children: [
                         Text(
                           'Alertas',
-                          style: Theme.of(context).textTheme.titleMedium
+                          style: Theme.of(context)
+                              .textTheme
+                              .titleMedium
                               ?.copyWith(fontWeight: FontWeight.bold),
                         ),
                         const SizedBox(height: 12),
-                        ..._buildAlertTogles(),
+                        ..._buildAlertToggles(),
                       ],
                     ),
                   ),
                 ),
                 const SizedBox(height: 16),
-
-                // Backup e Segurança
-                _buildBackupSection(),
-                const SizedBox(height: 16),
-
-                // Plano
                 Card(
                   child: Padding(
                     padding: const EdgeInsets.all(16),
@@ -388,12 +331,14 @@ class _ConfiguracoesPageState extends State<ConfiguracoesPage> {
                       children: [
                         Text(
                           'Plano',
-                          style: Theme.of(context).textTheme.titleMedium
+                          style: Theme.of(context)
+                              .textTheme
+                              .titleMedium
                               ?.copyWith(fontWeight: FontWeight.bold),
                         ),
                         const SizedBox(height: 12),
                         Text(
-                          _isPremium ? '⭐ Premium' : 'Grátis',
+                          _isPremium ? 'Premium' : 'Grátis',
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -410,17 +355,15 @@ class _ConfiguracoesPageState extends State<ConfiguracoesPage> {
                             ),
                           ),
                         if (_isPremium)
-                          Column(
-                            children: [
-                              SizedBox(
-                                width: double.infinity,
-                                child: OutlinedButton(
-                                  onPressed: _resetToFree,
-                                  child: const Text('Cancelar Premium (dev)'),
-                                ),
-                              ),
-                            ],
+                          const Text(
+                            'Premium ativo e vinculado à compra da loja.',
+                            style: TextStyle(color: Colors.green),
                           ),
+                        const SizedBox(height: 12),
+                        const Text(
+                          'Backup em nuvem está temporariamente indisponível nesta versão.',
+                          style: TextStyle(color: Colors.grey),
+                        ),
                       ],
                     ),
                   ),
@@ -430,7 +373,7 @@ class _ConfiguracoesPageState extends State<ConfiguracoesPage> {
     );
   }
 
-  List<Widget> _buildAlertTogles() {
+  List<Widget> _buildAlertToggles() {
     final thresholds = _isPremium ? [70, 80, 90, 95, 100] : [90, 100];
 
     return thresholds.map((threshold) {
@@ -446,290 +389,5 @@ class _ConfiguracoesPageState extends State<ConfiguracoesPage> {
         ),
       );
     }).toList();
-  }
-
-  // ==================== SEÇÃO DE BACKUP E SEGURANÇA ====================
-
-  Widget _buildBackupSection() {
-    // Estado 1: Usuário FREE - Card bloqueado
-    if (!_isPremium) {
-      return Card(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  const Icon(Icons.lock, color: Colors.grey),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Backup e segurança',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              const Text(
-                'Faça backup dos seus dados para não perdê-los ao trocar de celular.',
-                style: TextStyle(color: Colors.grey),
-              ),
-              const SizedBox(height: 16),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: _showBackupPaywall,
-                  child: const Text('Assinar Premium'),
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    // Estado 2: PREMIUM não logado - Botão de login
-    if (!_isAuthenticated || !SupabaseConfig.isConfigured) {
-      return Card(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  const Icon(Icons.cloud_outlined, color: Colors.blue),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Backup e segurança',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              const Text(
-                'Proteja seus dados antes de trocar de celular.',
-                style: TextStyle(color: Colors.grey),
-              ),
-              const SizedBox(height: 16),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: _navigateToBackupLogin,
-                  icon: const Icon(Icons.login),
-                  label: const Text('Fazer login para backup'),
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    // Estado 3: PREMIUM logado - Interface completa
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                const Icon(Icons.cloud_done, color: Colors.green),
-                const SizedBox(width: 8),
-                Text(
-                  'Backup e segurança',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Text(
-              _ultimoBackup != null
-                  ? 'Último backup: ${_formatDataBackup(_ultimoBackup!)}'
-                  : 'Nenhum backup realizado',
-              style: const TextStyle(color: Colors.grey),
-            ),
-            const SizedBox(height: 16),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: _fazerBackup,
-                icon: const Icon(Icons.cloud_upload),
-                label: const Text('Fazer backup agora'),
-              ),
-            ),
-            const SizedBox(height: 12),
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton.icon(
-                onPressed: _restaurarBackup,
-                icon: const Icon(Icons.cloud_download),
-                label: const Text('Restaurar backup'),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showBackupPaywall() {
-    showPaywall(
-      context,
-      title: 'Backup e segurança',
-      subtitle:
-          'Faça backup dos seus dados para não perdê-los ao trocar de celular.',
-      onUpgrade: () async {
-        Navigator.pop(context);
-        await _activatePremium();
-      },
-      onRestore: () async {
-        Navigator.pop(context);
-        await _restorePremium();
-      },
-    );
-  }
-
-  void _navigateToBackupLogin() async {
-    final result = await Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => const BackupPage()),
-    );
-
-    // Atualizar estado de autenticação após retornar
-    if (result == true || mounted) {
-      _checkAuth();
-    }
-  }
-
-  Future<void> _fazerBackup() async {
-    if (_supabaseService == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Serviço de backup não disponível'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
-    }
-
-    try {
-      // Obter receitas e settings
-      final receitaRepo = getIt<ReceitaRepository>();
-      final year = await _settingsRepo.getSelectedYear();
-      final receitas = await receitaRepo.getReceitasByYear(year);
-      final settings = await _settingsRepo.getSettings();
-
-      // Fazer backup
-      await _supabaseService!.backupReceitas(receitas);
-      await _supabaseService!.backupSettings(settings);
-
-      setState(() {
-        _ultimoBackup = DateTime.now();
-      });
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('✅ Backup realizado com sucesso.'),
-            backgroundColor: Colors.green,
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Erro ao fazer backup: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
-  }
-
-  Future<void> _restaurarBackup() async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Restaurar backup'),
-        content: const Text(
-          'Isso irá substituir os dados atuais do app.\nDeseja continuar?',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancelar'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Restaurar', style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed != true) return;
-    if (!mounted) return;
-
-    if (_supabaseService == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Serviço de backup não disponível'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
-    }
-
-    try {
-      final receitaRepo = getIt<ReceitaRepository>();
-
-      // Restaurar receitas
-      final receitas = await _supabaseService!.restoreReceitas();
-      for (final receita in receitas) {
-        await receitaRepo.addReceita(receita);
-      }
-
-      // Restaurar configurações
-      final settings = await _supabaseService!.restoreSettings();
-      if (settings != null) {
-        await _settingsRepo.saveSettings(settings);
-        if (!mounted) return;
-        setState(() => _settings = settings);
-      }
-
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('✅ Backup restaurado com sucesso.'),
-          backgroundColor: Colors.green,
-        ),
-      );
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Erro ao restaurar backup: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
-  }
-
-  String _formatDataBackup(DateTime data) {
-    final dia = data.day.toString().padLeft(2, '0');
-    final mes = data.month.toString().padLeft(2, '0');
-    final ano = data.year;
-    final hora = data.hour.toString().padLeft(2, '0');
-    final minuto = data.minute.toString().padLeft(2, '0');
-    return '$dia/$mes/$ano às $hora:$minuto';
   }
 }

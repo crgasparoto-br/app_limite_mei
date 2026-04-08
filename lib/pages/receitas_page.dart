@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import '../domain/entities/receita.dart';
 import '../domain/repositories/receita_repository.dart';
 import '../domain/repositories/settings_repository.dart';
@@ -6,6 +6,7 @@ import '../domain/repositories/entitlements_repository.dart';
 import '../data/services/export_service.dart';
 import '../service_locator.dart';
 import '../presentation/widgets/paywall_dialog.dart';
+import '../utils/date_formatters.dart';
 import 'edit_receita_page.dart';
 
 class ReceitasPage extends StatefulWidget {
@@ -94,11 +95,15 @@ class _ReceitasPageState extends State<ReceitasPage> {
   void _showFiltroPaywall() {
     showPaywall(
       context,
-      title: 'Filtro por Mês - Premium',
+      title: 'Filtro por mês - Premium',
       subtitle: 'Filtre suas receitas por mês e tenha mais controle sobre seus lançamentos!',
-      onUpgrade: () {
+      onUpgrade: () async {
         Navigator.pop(context);
-        // TODO: Navegar para tela de compra ou ativar premium
+        await _activatePremium();
+      },
+      onRestore: () async {
+        Navigator.pop(context);
+        await _restorePremium();
       },
     );
   }
@@ -121,11 +126,15 @@ class _ReceitasPageState extends State<ReceitasPage> {
   void _showAnoPaywall() {
     showPaywall(
       context,
-      title: 'Histórico de Anos Anteriores',
+      title: 'Histórico de anos anteriores',
       subtitle: 'Acesse o histórico completo de todos os anos!',
-      onUpgrade: () {
+      onUpgrade: () async {
         Navigator.pop(context);
-        // TODO: Navegar para tela de compra ou ativar premium
+        await _activatePremium();
+      },
+      onRestore: () async {
+        Navigator.pop(context);
+        await _restorePremium();
       },
     );
   }
@@ -173,7 +182,7 @@ class _ReceitasPageState extends State<ReceitasPage> {
   void _showEditBlockedPaywall() {
     showPaywall(
       context,
-      title: 'Edição Bloqueada',
+      title: 'Edição bloqueada',
       subtitle: 'Você atingiu o limite de 120 receitas no plano Free. Assine Premium para editar todas as suas receitas!',
       onUpgrade: () async {
         Navigator.pop(context);
@@ -236,7 +245,7 @@ class _ReceitasPageState extends State<ReceitasPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('✅ CSV exportado com sucesso!'),
+            content: Text('CSV exportado com sucesso!'),
             backgroundColor: Colors.green,
           ),
         );
@@ -264,7 +273,7 @@ class _ReceitasPageState extends State<ReceitasPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('✅ PDF exportado com sucesso!'),
+            content: Text('PDF exportado com sucesso!'),
             backgroundColor: Colors.green,
           ),
         );
@@ -299,30 +308,29 @@ class _ReceitasPageState extends State<ReceitasPage> {
 
   Future<void> _activatePremium() async {
     try {
-      final entitlements = await _entitlementsRepo.getEntitlements();
-      final newEntitlements = entitlements.copyWith(
-        isPremium: true,
-        dataCompra: DateTime.now(),
-      );
-      await _entitlementsRepo.setEntitlements(newEntitlements);
-      
-      if (mounted) {
+      final purchased = await _entitlementsRepo.purchasePremium();
+      if (!mounted) return;
+
+      if (purchased) {
         setState(() {
           _isPremium = true;
         });
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('✅ Premium ativado! (modo desenvolvimento)'),
+            content: Text('Premium ativado com sucesso!'),
             backgroundColor: Colors.green,
           ),
         );
-      }
-    } catch (e) {
-      if (mounted) {
+      } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro ao ativar Premium: $e')),
+          const SnackBar(content: Text('Compra cancelada.')),
         );
       }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro ao ativar Premium: $e')),
+      );
     }
   }
 
@@ -344,11 +352,10 @@ class _ReceitasPageState extends State<ReceitasPage> {
         }
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro: $e')),
-        );
-      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro: $e')),
+      );
     }
   }
 
@@ -510,7 +517,7 @@ class _ReceitasPageState extends State<ReceitasPage> {
                       subtitle: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(receita.data.toString().split(' ')[0]),
+                          Text(DateFormatters.date(receita.data)),
                           if (receita.descricao != null)
                             Text(
                               receita.descricao!,
@@ -566,3 +573,8 @@ class _ReceitasPageState extends State<ReceitasPage> {
     );
   }
 }
+
+
+
+
+

@@ -1,15 +1,16 @@
-import 'package:flutter/material.dart';
-import '../domain/usecases/get_dashboard_usecase.dart';
+﻿import 'package:flutter/material.dart';
+
+import '../data/services/alert_service.dart';
 import '../domain/repositories/entitlements_repository.dart';
 import '../domain/repositories/settings_repository.dart';
-import '../domain/entities/entitlements.dart';
-import '../service_locator.dart';
+import '../domain/usecases/get_dashboard_usecase.dart';
 import '../presentation/widgets/paywall_dialog.dart';
-import 'receitas_page.dart';
+import '../service_locator.dart';
 import 'add_receita_page.dart';
-import 'configuracoes_page.dart';
-import 'relatorio_mensal_page.dart';
 import 'comparativos_page.dart';
+import 'configuracoes_page.dart';
+import 'receitas_page.dart';
+import 'relatorio_mensal_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -21,6 +22,7 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   late GetDashboardUseCase _getDashboard;
   late SettingsRepository _settingsRepo;
+  late AlertService _alertService;
 
   DashboardData? _dashboardData;
   bool _loading = true;
@@ -32,6 +34,7 @@ class _HomePageState extends State<HomePage> {
     super.initState();
     _getDashboard = getIt<GetDashboardUseCase>();
     _settingsRepo = getIt<SettingsRepository>();
+    _alertService = getIt<AlertService>();
     _loadInitialData();
   }
 
@@ -53,6 +56,7 @@ class _HomePageState extends State<HomePage> {
     try {
       final entitlementsRepo = getIt<EntitlementsRepository>();
       final isPremium = await entitlementsRepo.isPremiumActive();
+      final settings = await _settingsRepo.getSettings();
       final data = await _getDashboard();
       if (mounted) {
         setState(() {
@@ -60,6 +64,11 @@ class _HomePageState extends State<HomePage> {
           _dashboardData = data;
           _loading = false;
         });
+        await _showInAppAlertsIfNeeded(
+          data: data,
+          alertasAtivos: settings.alertasAtivos,
+          isPremium: isPremium,
+        );
       }
     } catch (e) {
       if (mounted) {
@@ -69,6 +78,62 @@ class _HomePageState extends State<HomePage> {
         ).showSnackBar(SnackBar(content: Text('Erro: $e')));
       }
     }
+  }
+
+  Future<void> _showInAppAlertsIfNeeded({
+    required DashboardData data,
+    required Map<int, bool> alertasAtivos,
+    required bool isPremium,
+  }) async {
+    final pendingThresholds = _alertService.evaluateConfiguredThresholds(
+      data.percentual,
+      alertasAtivos,
+      isPremium,
+      data.year,
+    );
+
+    if (pendingThresholds.isEmpty || !mounted) return;
+
+    pendingThresholds.sort();
+    final threshold = pendingThresholds.last;
+
+    for (final value in pendingThresholds) {
+      await _alertService.markAlertAsSent(value, data.year);
+    }
+
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
+      await showDialog<void>(
+        context: context,
+        builder: (dialogContext) {
+          return AlertDialog(
+            title: Text(_buildAlertTitle(threshold, data)),
+            content: Text(_buildAlertMessage(threshold, data)),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(dialogContext).pop(),
+                child: const Text('Entendi'),
+              ),
+            ],
+          );
+        },
+      );
+    });
+  }
+
+  String _buildAlertTitle(int threshold, DashboardData data) {
+    if (threshold >= 100 || data.percentual >= 1.0) {
+      return 'Limite anual atingido';
+    }
+    return 'Alerta de limite';
+  }
+
+  String _buildAlertMessage(int threshold, DashboardData data) {
+    final percentual = (data.percentual * 100).toStringAsFixed(1);
+    if (threshold >= 100 || data.percentual >= 1.0) {
+      return 'Limite atingido: você chegou a $percentual% do limite anual.';
+    }
+    return 'Alerta de limite: você chegou a $percentual% do limite anual e cruzou o aviso de $threshold%.';
   }
 
   Future<void> _adicionarReceita() async {
@@ -99,7 +164,7 @@ class _HomePageState extends State<HomePage> {
   void _showAnosAnterioresPaywall() {
     showPaywall(
       context,
-      title: 'Histórico de Anos Anteriores',
+      title: 'Histórico de anos anteriores',
       subtitle:
           'Acesse o histórico completo e configure limites diferentes para cada ano!',
       onUpgrade: () async {
@@ -118,15 +183,15 @@ class _HomePageState extends State<HomePage> {
       case 'OK':
         return Colors.green;
       case 'ALERTA_70':
-        return Colors.green.shade800; // Verde escuro
+        return Colors.green.shade800;
       case 'ALERTA_80':
-        return Colors.yellow.shade700; // Amarelo
+        return Colors.yellow.shade700;
       case 'ALERTA_90':
-        return Colors.orange; // Laranja
+        return Colors.orange;
       case 'ALERTA_95':
-        return Colors.red; // Vermelho
+        return Colors.red;
       case 'LIMITE_ESTOURADO':
-        return Colors.red.shade900; // Vermelho escuro
+        return Colors.red.shade900;
       default:
         return Colors.grey;
     }
@@ -137,17 +202,17 @@ class _HomePageState extends State<HomePage> {
 
     switch (status) {
       case 'OK':
-        return '🟢 Tudo certo';
+        return 'Tudo certo';
       case 'ALERTA_70':
-        return 'ℹ️ Informativo: $percentualInt% utilizado';
+        return 'Informativo: $percentualInt% utilizado';
       case 'ALERTA_80':
-        return '⚠️ Atenção: $percentualInt% utilizado';
+        return 'Atenção: $percentualInt% utilizado';
       case 'ALERTA_90':
-        return '⚠️ Alerta: $percentualInt% utilizado';
+        return 'Alerta: $percentualInt% utilizado';
       case 'ALERTA_95':
-        return '🚨 Crítico: $percentualInt% utilizado';
+        return 'Crítico: $percentualInt% utilizado';
       case 'LIMITE_ESTOURADO':
-        return '⛔ LIMITE ESTOURADO!';
+        return 'LIMITE ESTOURADO!';
       default:
         return 'Status desconhecido';
     }
@@ -160,7 +225,6 @@ class _HomePageState extends State<HomePage> {
         title: const Text('Limite MEI'),
         elevation: 0,
         actions: [
-          // Seletor de Ano
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             child: _isPremium
@@ -234,25 +298,20 @@ class _HomePageState extends State<HomePage> {
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _dashboardData == null
-          ? const Center(child: Text('Erro ao carregar dados'))
-          : RefreshIndicator(
-              onRefresh: _loadDashboard,
-              child: ListView(
-                padding: const EdgeInsets.all(16),
-                children: [
-                  // Card Principal - Status
-                  _buildStatusCard(),
-                  const SizedBox(height: 24),
-
-                  // Resumo
-                  _buildResumoCard(),
-                  const SizedBox(height: 24),
-
-                  // Botões de Ação
-                  _buildActionButtons(),
-                ],
-              ),
-            ),
+              ? const Center(child: Text('Erro ao carregar dados'))
+              : RefreshIndicator(
+                  onRefresh: _loadDashboard,
+                  child: ListView(
+                    padding: const EdgeInsets.all(16),
+                    children: [
+                      _buildStatusCard(),
+                      const SizedBox(height: 24),
+                      _buildResumoCard(),
+                      const SizedBox(height: 24),
+                      _buildActionButtons(),
+                    ],
+                  ),
+                ),
     );
   }
 
@@ -271,7 +330,6 @@ class _HomePageState extends State<HomePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Barra de progresso
             Stack(
               alignment: Alignment.center,
               children: [
@@ -295,8 +353,6 @@ class _HomePageState extends State<HomePage> {
               ],
             ),
             const SizedBox(height: 16),
-
-            // Status
             Text(
               statusTexto,
               style: TextStyle(
@@ -306,8 +362,6 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
             const SizedBox(height: 12),
-
-            // Detalhes
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -372,8 +426,8 @@ class _HomePageState extends State<HomePage> {
                     Text(
                       _formatCurrency(data.totalMes),
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                            fontWeight: FontWeight.bold,
+                          ),
                     ),
                   ],
                 ),
@@ -387,8 +441,8 @@ class _HomePageState extends State<HomePage> {
                     Text(
                       '${data.countReceitas}${data.isPremium ? '' : '/120'}',
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                            fontWeight: FontWeight.bold,
+                          ),
                     ),
                   ],
                 ),
@@ -430,9 +484,8 @@ class _HomePageState extends State<HomePage> {
                   : null,
             ),
             child: ElevatedButton.icon(
-              onPressed: data.canAddMore
-                  ? _adicionarReceita
-                  : _showReceitaLimitPaywall,
+              onPressed:
+                  data.canAddMore ? _adicionarReceita : _showReceitaLimitPaywall,
               icon: const Icon(Icons.add_circle, size: 28),
               label: const Text(
                 '+ Nova Receita',
@@ -459,7 +512,6 @@ class _HomePageState extends State<HomePage> {
                     context,
                     MaterialPageRoute(builder: (_) => const ReceitasPage()),
                   );
-                  // Recarregar dados e status Premium ao voltar
                   await _loadInitialData();
                 },
                 icon: const Icon(Icons.list),
@@ -476,7 +528,6 @@ class _HomePageState extends State<HomePage> {
                       builder: (_) => const ConfiguracoesPage(),
                     ),
                   );
-                  // Recarregar dados e status Premium ao voltar
                   await _loadInitialData();
                 },
                 icon: const Icon(Icons.settings),
@@ -486,8 +537,6 @@ class _HomePageState extends State<HomePage> {
           ],
         ),
         const SizedBox(height: 16),
-
-        // Botões Premium
         Row(
           children: [
             Expanded(
@@ -503,9 +552,9 @@ class _HomePageState extends State<HomePage> {
                   } else {
                     showPaywall(
                       context,
-                      title: 'Relatório Mensal - Premium',
+                      title: 'Relatório mensal - Premium',
                       subtitle:
-                          'Entenda seu faturamento por mês + análise de semanas e dias!',
+                          'Entenda seu faturamento por mês com mais profundidade.',
                       onUpgrade: () async {
                         Navigator.pop(context);
                         await _activatePremium();
@@ -550,7 +599,7 @@ class _HomePageState extends State<HomePage> {
                       context,
                       title: 'Comparativos - Premium',
                       subtitle:
-                          'Compare meses, anos e acompanhe seu ritmo de faturamento!',
+                          'Compare meses, anos e acompanhe seu ritmo de faturamento.',
                       onUpgrade: () async {
                         Navigator.pop(context);
                         await _activatePremium();
@@ -603,33 +652,29 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _activatePremium() async {
-    // TODO: Integrar com Google Play Billing
-    // Por enquanto, ativa Premium localmente para testes
     try {
       final entitlementsRepo = getIt<EntitlementsRepository>();
-      final entitlements = Entitlements(
-        isPremium: true,
-        dataCompra: DateTime.now(),
-        dataExpiracao: null,
-      );
-      await entitlementsRepo.setEntitlements(entitlements);
+      final purchased = await entitlementsRepo.purchasePremium();
+      if (!mounted) return;
 
-      if (mounted) {
+      if (purchased) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('✅ Premium ativado! (modo desenvolvimento)'),
+            content: Text('Premium ativado com sucesso!'),
             backgroundColor: Colors.green,
           ),
         );
-        // Recarregar dashboard para refletir mudanças
         await _loadDashboard();
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Compra cancelada.')),
+        );
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Erro ao ativar Premium: $e')));
-      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Erro ao ativar Premium: $e')));
     }
   }
 
@@ -637,24 +682,23 @@ class _HomePageState extends State<HomePage> {
     try {
       final entitlementsRepo = getIt<EntitlementsRepository>();
       final restored = await entitlementsRepo.restorePurchase();
-      if (mounted) {
-        if (restored) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(const SnackBar(content: Text('Premium restaurado!')));
-          await _loadDashboard();
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Nenhuma compra encontrada')),
-          );
-        }
-      }
-    } catch (e) {
-      if (mounted) {
+      if (!mounted) return;
+
+      if (restored) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Erro: $e')));
+        ).showSnackBar(const SnackBar(content: Text('Premium restaurado!')));
+        await _loadDashboard();
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Nenhuma compra encontrada')),
+        );
       }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Erro: $e')));
     }
   }
 

@@ -1,9 +1,10 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
+
 import '../domain/entities/comparativo_mensal.dart';
-import '../domain/usecases/get_comparativos_usecase.dart';
 import '../domain/repositories/entitlements_repository.dart';
-import '../service_locator.dart';
+import '../domain/usecases/get_comparativos_usecase.dart';
 import '../presentation/widgets/paywall_dialog.dart';
+import '../service_locator.dart';
 
 class ComparativosPage extends StatefulWidget {
   const ComparativosPage({super.key});
@@ -26,7 +27,7 @@ class _ComparativosPageState extends State<ComparativosPage>
   MetaRitmo? _metaRitmo;
 
   final int _anoSelecionado = DateTime.now().year;
-  final int _mesSelecionado = DateTime.now().month;
+  int _mesSelecionado = DateTime.now().month;
 
   @override
   void initState() {
@@ -68,21 +69,19 @@ class _ComparativosPageState extends State<ComparativosPage>
       );
       final metaRitmo = await _getComparativos.getMetaRitmo(_anoSelecionado);
 
-      if (mounted) {
-        setState(() {
-          _comparativoMensal = comparativoMensal;
-          _comparativoAnual = comparativoAnual;
-          _metaRitmo = metaRitmo;
-          _loading = false;
-        });
-      }
+      if (!mounted) return;
+      setState(() {
+        _comparativoMensal = comparativoMensal;
+        _comparativoAnual = comparativoAnual;
+        _metaRitmo = metaRitmo;
+        _loading = false;
+      });
     } catch (e) {
-      if (mounted) {
-        setState(() => _loading = false);
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Erro: $e')));
-      }
+      if (!mounted) return;
+      setState(() => _loading = false);
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Erro: $e')));
     }
   }
 
@@ -100,6 +99,42 @@ class _ComparativosPageState extends State<ComparativosPage>
         Navigator.pop(context);
       },
     );
+  }
+
+  Future<void> _selecionarMes() async {
+    final mes = await showModalBottomSheet<int>(
+      context: context,
+      builder: (context) {
+        return SafeArea(
+          child: ListView(
+            shrinkWrap: true,
+            children: [
+              const ListTile(
+                title: Text(
+                  'Selecionar mês',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ),
+              ...List.generate(12, (index) {
+                final value = index + 1;
+                return ListTile(
+                  title: Text(_getNomeMes(value)),
+                  trailing: value == _mesSelecionado
+                      ? const Icon(Icons.check, color: Colors.blue)
+                      : null,
+                  onTap: () => Navigator.pop(context, value),
+                );
+              }),
+            ],
+          ),
+        );
+      },
+    );
+
+    if (mes == null || mes == _mesSelecionado) return;
+
+    setState(() => _mesSelecionado = mes);
+    await _loadComparativos();
   }
 
   String _formatCurrency(double value) {
@@ -177,20 +212,15 @@ class _ComparativosPageState extends State<ComparativosPage>
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          // Seletor de mês
           Card(
             child: ListTile(
               leading: const Icon(Icons.calendar_month),
               title: Text('${_getNomeMes(_mesSelecionado)}/$_anoSelecionado'),
               trailing: const Icon(Icons.edit),
-              onTap: () {
-                // TODO: Implementar seletor de mês
-              },
+              onTap: _selecionarMes,
             ),
           ),
           const SizedBox(height: 24),
-
-          // Delta grande
           Card(
             color: corFundo,
             child: Padding(
@@ -229,8 +259,6 @@ class _ComparativosPageState extends State<ComparativosPage>
             ),
           ),
           const SizedBox(height: 24),
-
-          // Detalhes
           Card(
             child: Padding(
               padding: const EdgeInsets.all(16),
@@ -280,7 +308,6 @@ class _ComparativosPageState extends State<ComparativosPage>
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          // Delta anual
           Card(
             color: corFundo,
             child: Padding(
@@ -316,8 +343,6 @@ class _ComparativosPageState extends State<ComparativosPage>
             ),
           ),
           const SizedBox(height: 24),
-
-          // Comparativo por mês
           Card(
             child: Padding(
               padding: const EdgeInsets.all(16),
@@ -325,7 +350,7 @@ class _ComparativosPageState extends State<ComparativosPage>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Por Mês',
+                    'Por mês',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
@@ -416,7 +441,9 @@ class _ComparativosPageState extends State<ComparativosPage>
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
-                      color: meta.acimaDoRitmo ? Colors.orange.shade800 : Colors.green.shade800,
+                      color: meta.acimaDoRitmo
+                          ? Colors.orange.shade800
+                          : Colors.green.shade800,
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -425,7 +452,6 @@ class _ComparativosPageState extends State<ComparativosPage>
             ),
           ),
           const SizedBox(height: 24),
-
           Card(
             child: Padding(
               padding: const EdgeInsets.all(16),
@@ -461,7 +487,6 @@ class _ComparativosPageState extends State<ComparativosPage>
             ),
           ),
           const SizedBox(height: 16),
-
           Card(
             child: Padding(
               padding: const EdgeInsets.all(16),
@@ -476,17 +501,14 @@ class _ComparativosPageState extends State<ComparativosPage>
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    'Para não estourar o limite de ${_formatCurrency(meta.limiteAnual)} em $_anoSelecionado, '
-                    'você precisa faturar em média ${_formatCurrency(meta.mediaIdeal)} por mês.',
+                    'Para não estourar o limite de ${_formatCurrency(meta.limiteAnual)} em $_anoSelecionado, você precisa faturar em média ${_formatCurrency(meta.mediaIdeal)} por mês.',
                     style: const TextStyle(fontSize: 14),
                   ),
                   const SizedBox(height: 12),
                   Text(
                     meta.acimaDoRitmo
-                        ? '⚠️ Você está faturando ${_formatCurrency(meta.mediaAtual)} por mês (${meta.porcentagemDoRitmo.toStringAsFixed(0)}% do ritmo ideal). '
-                              'Considere reduzir o ritmo nos próximos meses para não estourar o limite.'
-                        : '✅ Você está faturando ${_formatCurrency(meta.mediaAtual)} por mês (${meta.porcentagemDoRitmo.toStringAsFixed(0)}% do ritmo ideal). '
-                              'Continue neste ritmo para ficar dentro do limite!',
+                        ? 'Você está faturando ${_formatCurrency(meta.mediaAtual)} por mês (${meta.porcentagemDoRitmo.toStringAsFixed(0)}% do ritmo ideal). Considere reduzir o ritmo nos próximos meses para não estourar o limite.'
+                        : 'Você está faturando ${_formatCurrency(meta.mediaAtual)} por mês (${meta.porcentagemDoRitmo.toStringAsFixed(0)}% do ritmo ideal). Continue neste ritmo para ficar dentro do limite!',
                     style: TextStyle(
                       fontSize: 14,
                       color: cor,

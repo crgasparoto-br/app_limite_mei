@@ -1,11 +1,11 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
 import '../domain/entities/receita.dart';
-import '../domain/entities/entitlements.dart';
 import '../domain/usecases/add_receita_usecase.dart';
 import '../domain/repositories/entitlements_repository.dart';
 import '../service_locator.dart';
 import '../presentation/widgets/paywall_dialog.dart';
+import '../utils/date_formatters.dart';
 import '../widgets/currency_input_formatter.dart';
 
 class AddReceitaPage extends StatefulWidget {
@@ -49,13 +49,13 @@ class _AddReceitaPageState extends State<AddReceitaPage> {
       return;
     }
 
-    // Validar data não futura
+    // Validar data nÃ£o futura
     final hoje = DateTime.now();
     final hojeSemHora = DateTime(hoje.year, hoje.month, hoje.day);
     final dataSelecionadaSemHora = DateTime(_dataSelecionada.year, _dataSelecionada.month, _dataSelecionada.day);
     
     if (dataSelecionadaSemHora.isAfter(hojeSemHora)) {
-      _showSnackbar('A data não pode ser futura');
+      _showSnackbar('A data nÃ£o pode ser futura');
       return;
     }
 
@@ -100,8 +100,8 @@ class _AddReceitaPageState extends State<AddReceitaPage> {
   void _showPaywall() {
     showPaywall(
       context,
-      title: 'Limite de lançamentos atingido',
-      subtitle: 'Você já registrou 120 receitas. Assine Premium para ilimitado!',
+      title: 'Limite de lanÃ§amentos atingido',
+      subtitle: 'VocÃª jÃ¡ registrou 120 receitas. Assine Premium para ilimitado!',
       onUpgrade: () async {
         Navigator.pop(context);
         await _activatePremium();
@@ -116,15 +116,13 @@ class _AddReceitaPageState extends State<AddReceitaPage> {
   Future<void> _activatePremium() async {
     try {
       final entitlementsRepo = getIt<EntitlementsRepository>();
-      final entitlements = Entitlements(
-        isPremium: true,
-        dataCompra: DateTime.now(),
-        dataExpiracao: null,
-      );
-      await entitlementsRepo.setEntitlements(entitlements);
-      
-      if (mounted) {
-        _showSnackbar('✅ Premium ativado! Agora você pode adicionar a receita.');
+      final purchased = await entitlementsRepo.purchasePremium();
+      if (!mounted) return;
+
+      if (purchased) {
+        _showSnackbar('Premium ativado! Agora voce pode adicionar a receita.');
+      } else {
+        _showSnackbar('Compra cancelada.');
       }
     } catch (e) {
       _showSnackbar('Erro ao ativar Premium: $e');
@@ -137,7 +135,7 @@ class _AddReceitaPageState extends State<AddReceitaPage> {
       final restored = await entitlementsRepo.restorePurchase();
       if (mounted) {
         if (restored) {
-          _showSnackbar('Premium restaurado! Você pode adicionar a receita.');
+          _showSnackbar('Premium restaurado! Voce pode adicionar a receita.');
         } else {
           _showSnackbar('Nenhuma compra encontrada');
         }
@@ -159,6 +157,7 @@ class _AddReceitaPageState extends State<AddReceitaPage> {
       initialDate: _dataSelecionada,
       firstDate: DateTime(_dataSelecionada.year - 5),
       lastDate: DateTime.now(),
+      locale: const Locale('pt', 'BR'),
     );
     if (data != null) {
       setState(() => _dataSelecionada = data);
@@ -208,7 +207,7 @@ class _AddReceitaPageState extends State<AddReceitaPage> {
             const SizedBox(height: 16),
             ListTile(
               title: const Text('Data'),
-              subtitle: Text(_dataSelecionada.toString().split(' ')[0]),
+              subtitle: Text(DateFormatters.date(_dataSelecionada)),
               trailing: const Icon(Icons.calendar_today),
               onTap: _escolherData,
             ),
@@ -217,8 +216,8 @@ class _AddReceitaPageState extends State<AddReceitaPage> {
               controller: _descricaoCtrl,
               maxLines: 3,
               decoration: const InputDecoration(
-                labelText: 'Descrição (opcional)',
-                hintText: 'Ex: Venda de produto, Serviço...',
+                labelText: 'DescriÃ§Ã£o (opcional)',
+                hintText: 'Ex: Venda de produto, ServiÃ§o...',
               ),
             ),
             const Spacer(),
@@ -235,3 +234,7 @@ class _AddReceitaPageState extends State<AddReceitaPage> {
     );
   }
 }
+
+
+
+

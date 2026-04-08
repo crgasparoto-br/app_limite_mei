@@ -1,16 +1,24 @@
-# app_limite_mei
+﻿# Limite MEI
 
-A new Flutter project.
+Aplicativo Flutter para acompanhar o faturamento anual do MEI, controlar alertas de limite e desbloquear recursos Premium.
 
-## Getting Started
+## Documentos principais
 
-This project is a starting point for a Flutter application.
+- `PROXIMOS_PASSOS_PLAY_CONSOLE.md`: checklist operacional para subir a versao atual na Google Play
+- `GOOGLE_PLAY_BILLING.md`: configuracao do produto Premium e fluxo de cobranca pela Play Store
 
-A few resources to get you started if this is your first Flutter project:
+## Stack principal
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+- Flutter
+- SharedPreferences
+- Google Play Billing via `in_app_purchase`
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Premium
+
+O Premium usa compra nao consumivel pela Google Play.
+
+Produto configurado no app:
+
+- `br.com.limitemei.premium`
+
+Esse ID precisa ser igual ao produto cadastrado na Play Console.

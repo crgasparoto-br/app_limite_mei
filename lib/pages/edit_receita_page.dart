@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../domain/entities/receita.dart';
 import '../domain/usecases/update_receita_usecase.dart';
 import '../service_locator.dart';
+import '../utils/date_formatters.dart';
 import '../widgets/currency_input_formatter.dart';
 
 class EditReceitaPage extends StatefulWidget {
@@ -117,6 +118,7 @@ class _EditReceitaPageState extends State<EditReceitaPage> {
       initialDate: _dataSelecionada,
       firstDate: DateTime(_dataSelecionada.year - 5),
       lastDate: DateTime.now(),
+      locale: const Locale('pt', 'BR'),
     );
     if (data != null) {
       setState(() => _dataSelecionada = data);
@@ -166,7 +168,7 @@ class _EditReceitaPageState extends State<EditReceitaPage> {
             const SizedBox(height: 16),
             ListTile(
               title: const Text('Data'),
-              subtitle: Text(_dataSelecionada.toString().split(' ')[0]),
+              subtitle: Text(DateFormatters.date(_dataSelecionada)),
               trailing: const Icon(Icons.calendar_today),
               onTap: _escolherData,
             ),

@@ -128,7 +128,6 @@ class _FeatureList extends StatelessWidget {
       'Análise de ritmo de faturamento',
       'Alertas 70%, 80%, 90%, 95%, 100%',
       'Exportar para contador (CSV/PDF)',
-      'Backup e restauração em nuvem',
       'Histórico de anos anteriores',
     ];
 

@@ -4,6 +4,7 @@ import '../domain/usecases/get_relatorio_mensal_usecase.dart';
 import '../domain/repositories/entitlements_repository.dart';
 import '../service_locator.dart';
 import '../presentation/widgets/paywall_dialog.dart';
+import '../utils/date_formatters.dart';
 
 class RelatorioMensalPage extends StatefulWidget {
   const RelatorioMensalPage({super.key});
@@ -106,13 +107,6 @@ class _RelatorioMensalPageState extends State<RelatorioMensalPage> {
       'Dez',
     ];
     return meses[mes - 1];
-  }
-
-  String _formatData(DateTime data) {
-    final dia = data.day.toString().padLeft(2, '0');
-    final mes = data.month.toString().padLeft(2, '0');
-    final ano = data.year;
-    return '$dia/$mes/$ano';
   }
 
   @override
@@ -262,7 +256,7 @@ class _RelatorioMensalPageState extends State<RelatorioMensalPage> {
         if (relatorio.dataMaiorLancamento != null) ...[
           const SizedBox(height: 8),
           Text(
-            'Maior lançamento em ${_formatData(relatorio.dataMaiorLancamento!)}',
+            'Maior lançamento em ${DateFormatters.date(relatorio.dataMaiorLancamento!)}',
 
             style: Theme.of(
               context,
@@ -296,7 +290,7 @@ class _RelatorioMensalPageState extends State<RelatorioMensalPage> {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          '${_formatData(relatorio.diaDePico!.data)} - ${_formatCurrency(relatorio.diaDePico!.total)}',
+                          '${DateFormatters.date(relatorio.diaDePico!.data)} - ${_formatCurrency(relatorio.diaDePico!.total)}',
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -469,7 +463,7 @@ class _RelatorioMensalPageState extends State<RelatorioMensalPage> {
                   ),
                 ),
                 title: Text(
-                  _formatData(dia.data),
+                  DateFormatters.date(dia.data),
                   style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
                 subtitle: Text('${dia.qtdLancamentos} lançamento(s)'),
