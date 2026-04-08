@@ -30,11 +30,14 @@ Artefato pronto para upload:
 
 ## Passo 2 - Configurar o Premium
 
-Antes de liberar para usuarios finais, confirme o produto da cobranca:
+Antes de liberar para usuarios finais, confirme os planos da cobranca:
 
 - leia `GOOGLE_PLAY_BILLING.md`
-- crie ou valide o produto `br.com.limitemei.premium`
-- publique esse produto no mesmo track de teste do app
+- crie ou valide os planos:
+  `br.com.limitemei.premium.mensal`
+  `br.com.limitemei.premium.anual`
+  `br.com.limitemei.premium.vitalicio`
+- publique os 3 planos no mesmo track de teste do app
 - teste compra e restauracao pela Play Store
 
 ## Passo 3 - Ficha da loja
@@ -50,7 +53,25 @@ Ainda falta concluir:
 - classificacao de conteudo
 - preco e distribuicao
 
-## Passo 4 - Se precisar gerar novamente
+## Passo 4 - Validacao do fluxo pago
+
+Antes de publicar para mais usuarios, valide este roteiro:
+
+1. Abrir um bloqueio de recurso no app
+2. Verificar se o paywall mostra os 3 planos
+3. Comprar o plano mensal e confirmar liberacao imediata
+4. Reinstalar o app e testar `Restaurar compra`
+5. Repetir o teste com o plano anual
+6. Repetir o teste com o plano vitalicio
+7. Confirmar que os recursos liberados incluem:
+   relatorio mensal
+   comparativos
+   exportacao
+   filtro por mes
+   anos anteriores
+8. Confirmar que o plano ativo aparece corretamente em Configuracoes
+
+## Passo 5 - Se precisar gerar novamente
 
 ```bash
 flutter clean

@@ -4,8 +4,8 @@ import '../domain/repositories/receita_repository.dart';
 import '../domain/repositories/settings_repository.dart';
 import '../domain/repositories/entitlements_repository.dart';
 import '../data/services/export_service.dart';
+import '../presentation/widgets/premium_purchase_flow.dart';
 import '../service_locator.dart';
-import '../presentation/widgets/paywall_dialog.dart';
 import '../utils/date_formatters.dart';
 import 'edit_receita_page.dart';
 
@@ -93,18 +93,11 @@ class _ReceitasPageState extends State<ReceitasPage> {
   }
 
   void _showFiltroPaywall() {
-    showPaywall(
+    showPremiumPaywallFlow(
       context,
-      title: 'Filtro por mês - Premium',
-      subtitle: 'Filtre suas receitas por mês e tenha mais controle sobre seus lançamentos!',
-      onUpgrade: () async {
-        Navigator.pop(context);
-        await _activatePremium();
-      },
-      onRestore: () async {
-        Navigator.pop(context);
-        await _restorePremium();
-      },
+      title: 'Liberar filtro por mes',
+      subtitle: 'Escolha um plano para filtrar suas receitas por mes e ter mais controle.',
+      onSuccess: _refreshPremiumState,
     );
   }
 
@@ -124,18 +117,11 @@ class _ReceitasPageState extends State<ReceitasPage> {
   }
 
   void _showAnoPaywall() {
-    showPaywall(
+    showPremiumPaywallFlow(
       context,
       title: 'Histórico de anos anteriores',
-      subtitle: 'Acesse o histórico completo de todos os anos!',
-      onUpgrade: () async {
-        Navigator.pop(context);
-        await _activatePremium();
-      },
-      onRestore: () async {
-        Navigator.pop(context);
-        await _restorePremium();
-      },
+      subtitle: 'Escolha um plano para acessar o historico completo de todos os anos.',
+      onSuccess: _refreshPremiumState,
     );
   }
 
@@ -180,18 +166,11 @@ class _ReceitasPageState extends State<ReceitasPage> {
   }
 
   void _showEditBlockedPaywall() {
-    showPaywall(
+    showPremiumPaywallFlow(
       context,
       title: 'Edição bloqueada',
-      subtitle: 'Você atingiu o limite de 120 receitas no plano Free. Assine Premium para editar todas as suas receitas!',
-      onUpgrade: () async {
-        Navigator.pop(context);
-        await _activatePremium();
-      },
-      onRestore: () async {
-        Navigator.pop(context);
-        await _restorePremium();
-      },
+      subtitle: 'Voce atingiu o limite de 120 receitas na versao gratuita. Escolha um plano para editar todas as suas receitas!',
+      onSuccess: _refreshPremiumState,
     );
   }
 
@@ -291,72 +270,17 @@ class _ReceitasPageState extends State<ReceitasPage> {
   }
 
   void _showExportPaywall() {
-    showPaywall(
+    showPremiumPaywallFlow(
       context,
-      title: 'Exportação Premium',
-      subtitle: 'Exporte suas receitas em CSV ou PDF para enviar ao contador!',
-      onUpgrade: () async {
-        Navigator.pop(context);
-        await _activatePremium();
-      },
-      onRestore: () async {
-        Navigator.pop(context);
-        await _restorePremium();
-      },
+      title: 'Liberar exportacao',
+      subtitle: 'Escolha um plano para exportar suas receitas em CSV ou PDF.',
+      onSuccess: _refreshPremiumState,
     );
   }
 
-  Future<void> _activatePremium() async {
-    try {
-      final purchased = await _entitlementsRepo.purchasePremium();
-      if (!mounted) return;
-
-      if (purchased) {
-        setState(() {
-          _isPremium = true;
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Premium ativado com sucesso!'),
-            backgroundColor: Colors.green,
-          ),
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Compra cancelada.')),
-        );
-      }
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erro ao ativar Premium: $e')),
-      );
-    }
-  }
-
-  Future<void> _restorePremium() async {
-    try {
-      final restored = await _entitlementsRepo.restorePurchase();
-      if (mounted) {
-        if (restored) {
-          setState(() {
-            _isPremium = true;
-          });
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Premium restaurado!')),
-          );
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Nenhuma compra encontrada')),
-          );
-        }
-      }
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erro: $e')),
-      );
-    }
+  Future<void> _refreshPremiumState() async {
+    await _loadPremiumStatus();
+    await _loadReceitas();
   }
 
   String _formatCurrency(double value) {
@@ -449,7 +373,7 @@ class _ReceitasPageState extends State<ReceitasPage> {
               Icons.file_download,
               color: _isPremium ? Colors.blue : Colors.grey,
             ),
-            tooltip: _isPremium ? 'Exportar' : 'Exportar (Premium)',
+            tooltip: _isPremium ? 'Exportar' : 'Exportar com a versao completa',
             onPressed: _exportarReceitas,
           ),
         ],
@@ -474,7 +398,7 @@ class _ReceitasPageState extends State<ReceitasPage> {
                           isExpanded: true,
                           value: _mesFiltro,
                           hint: Text(
-                            'Filtrar por mês${_isPremium ? '' : ' (Premium)'}',
+                            'Filtrar por mes${_isPremium ? '' : ' (versao completa)'}',
                             style: TextStyle(
                               color: _isPremium ? Colors.black87 : Colors.grey,
                             ),

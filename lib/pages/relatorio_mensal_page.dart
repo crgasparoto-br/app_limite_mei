@@ -1,9 +1,9 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import '../domain/entities/relatorio_mensal.dart';
 import '../domain/usecases/get_relatorio_mensal_usecase.dart';
 import '../domain/repositories/entitlements_repository.dart';
 import '../service_locator.dart';
-import '../presentation/widgets/paywall_dialog.dart';
+import '../presentation/widgets/premium_purchase_flow.dart';
 import '../utils/date_formatters.dart';
 
 class RelatorioMensalPage extends StatefulWidget {
@@ -66,17 +66,14 @@ class _RelatorioMensalPageState extends State<RelatorioMensalPage> {
   }
 
   void _showPaywall() {
-    showPaywall(
+    showPremiumPaywallFlow(
       context,
-      title: 'Relatório Mensal - Premium',
-      subtitle: 'Entenda seu faturamento por mês + análise de semanas e dias!',
-      onUpgrade: () {
-        Navigator.pop(context);
-        Navigator.pop(context); // Volta para tela anterior
-      },
-      onRestore: () {
-        Navigator.pop(context);
-        Navigator.pop(context);
+      title: 'Liberar relatorio mensal',
+      subtitle: 'Escolha um plano para ver seu faturamento com analise de semanas e dias.',
+      onSuccess: () async {
+        if (!mounted) return;
+        setState(() => _isPremium = true);
+        await _loadRelatorio();
       },
     );
   }
@@ -117,9 +114,9 @@ class _RelatorioMensalPageState extends State<RelatorioMensalPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Relatório Mensal'),
+        title: const Text('RelatÃ³rio Mensal'),
         actions: [
-          // Seletor de Mês/Ano
+          // Seletor de MÃªs/Ano
           Padding(
             padding: const EdgeInsets.only(right: 16),
             child: Container(
@@ -156,13 +153,13 @@ class _RelatorioMensalPageState extends State<RelatorioMensalPage> {
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _relatorio == null
-          ? const Center(child: Text('Erro ao carregar relatório'))
+          ? const Center(child: Text('Erro ao carregar relatÃ³rio'))
           : RefreshIndicator(
               onRefresh: _loadRelatorio,
               child: ListView(
                 padding: const EdgeInsets.all(16),
                 children: [
-                  // Título do mês
+                  // TÃ­tulo do mÃªs
                   Text(
                     '${_getNomeMes(_mesSelecionado)} de $_anoSelecionado',
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
@@ -175,7 +172,7 @@ class _RelatorioMensalPageState extends State<RelatorioMensalPage> {
                   _buildCardsResumo(),
                   const SizedBox(height: 24),
 
-                  // Seção por semana
+                  // SeÃ§Ã£o por semana
                   _buildSecaoPorSemana(),
                   const SizedBox(height: 24),
 
@@ -191,7 +188,7 @@ class _RelatorioMensalPageState extends State<RelatorioMensalPage> {
     final items = <DropdownMenuItem<String>>[];
     final now = DateTime.now();
 
-    // Últimos 12 meses
+    // Ãšltimos 12 meses
     for (int i = 0; i < 12; i++) {
       final data = DateTime(now.year, now.month - i, 1);
       items.add(
@@ -214,7 +211,7 @@ class _RelatorioMensalPageState extends State<RelatorioMensalPage> {
           children: [
             Expanded(
               child: _buildCardInfo(
-                'Total do Mês',
+                'Total do MÃªs',
                 _formatCurrency(relatorio.totalMes),
                 Icons.attach_money,
                 Colors.blue,
@@ -223,7 +220,7 @@ class _RelatorioMensalPageState extends State<RelatorioMensalPage> {
             const SizedBox(width: 12),
             Expanded(
               child: _buildCardInfo(
-                'Lançamentos',
+                'LanÃ§amentos',
                 relatorio.qtdLancamentos.toString(),
                 Icons.receipt_long,
                 Colors.green,
@@ -236,7 +233,7 @@ class _RelatorioMensalPageState extends State<RelatorioMensalPage> {
           children: [
             Expanded(
               child: _buildCardInfo(
-                'Média/Lançamento',
+                'MÃ©dia/LanÃ§amento',
                 _formatCurrency(relatorio.mediaPorLancamento),
                 Icons.show_chart,
                 Colors.orange,
@@ -245,7 +242,7 @@ class _RelatorioMensalPageState extends State<RelatorioMensalPage> {
             const SizedBox(width: 12),
             Expanded(
               child: _buildCardInfo(
-                'Maior Lançamento',
+                'Maior LanÃ§amento',
                 _formatCurrency(relatorio.maiorLancamento),
                 Icons.star,
                 Colors.purple,
@@ -256,7 +253,7 @@ class _RelatorioMensalPageState extends State<RelatorioMensalPage> {
         if (relatorio.dataMaiorLancamento != null) ...[
           const SizedBox(height: 8),
           Text(
-            'Maior lançamento em ${DateFormatters.date(relatorio.dataMaiorLancamento!)}',
+            'Maior lanÃ§amento em ${DateFormatters.date(relatorio.dataMaiorLancamento!)}',
 
             style: Theme.of(
               context,
@@ -282,7 +279,7 @@ class _RelatorioMensalPageState extends State<RelatorioMensalPage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          '🏆 Dia de Pico',
+                          'ðŸ† Dia de Pico',
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             color: Colors.amber.shade900,
@@ -298,7 +295,7 @@ class _RelatorioMensalPageState extends State<RelatorioMensalPage> {
                           ),
                         ),
                         Text(
-                          '${relatorio.diaDePico!.qtdLancamentos} lançamento(s)',
+                          '${relatorio.diaDePico!.qtdLancamentos} lanÃ§amento(s)',
                           style: TextStyle(
                             fontSize: 12,
                             color: Colors.grey.shade700,
@@ -455,7 +452,7 @@ class _RelatorioMensalPageState extends State<RelatorioMensalPage> {
                       ? Colors.amber
                       : Colors.blue.shade100,
                   child: Text(
-                    '${index + 1}º',
+                    '${index + 1}Âº',
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       color: index == 0 ? Colors.black : Colors.blue.shade900,
@@ -466,7 +463,7 @@ class _RelatorioMensalPageState extends State<RelatorioMensalPage> {
                   DateFormatters.date(dia.data),
                   style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
-                subtitle: Text('${dia.qtdLancamentos} lançamento(s)'),
+                subtitle: Text('${dia.qtdLancamentos} lanÃ§amento(s)'),
                 trailing: Text(
                   _formatCurrency(dia.total),
                   style: const TextStyle(
@@ -482,3 +479,4 @@ class _RelatorioMensalPageState extends State<RelatorioMensalPage> {
     );
   }
 }
+

@@ -5,7 +5,7 @@ abstract class EntitlementsRepository {
 
   Future<void> setEntitlements(Entitlements entitlements);
 
-  Future<bool> purchasePremium();
+  Future<bool> purchasePremium(String productId);
 
   Future<bool> isPremiumActive();
 

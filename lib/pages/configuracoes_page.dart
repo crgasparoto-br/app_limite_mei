@@ -3,7 +3,7 @@
 import '../domain/entities/app_settings.dart';
 import '../domain/repositories/entitlements_repository.dart';
 import '../domain/repositories/settings_repository.dart';
-import '../presentation/widgets/paywall_dialog.dart';
+import '../presentation/widgets/premium_purchase_flow.dart';
 import '../service_locator.dart';
 import '../widgets/currency_input_formatter.dart';
 
@@ -22,6 +22,7 @@ class _ConfiguracoesPageState extends State<ConfiguracoesPage> {
   bool _isPremium = false;
   bool _loading = true;
   int _anoSelecionado = DateTime.now().year;
+  String? _planLabel;
 
   @override
   void initState() {
@@ -34,12 +35,13 @@ class _ConfiguracoesPageState extends State<ConfiguracoesPage> {
   Future<void> _loadSettings() async {
     try {
       final settings = await _settingsRepo.getSettings();
-      final isPremium = await _entitlementsRepo.isPremiumActive();
+      final entitlements = await _entitlementsRepo.getEntitlements();
 
       if (!mounted) return;
       setState(() {
         _settings = settings;
-        _isPremium = isPremium;
+        _isPremium = entitlements.isActive;
+        _planLabel = entitlements.planLabel;
         _loading = false;
       });
     } catch (_) {
@@ -106,19 +108,12 @@ class _ConfiguracoesPageState extends State<ConfiguracoesPage> {
   }
 
   void _showAnosAnterioresPaywall() {
-    showPaywall(
+    showPremiumPaywallFlow(
       context,
-      title: 'Anos anteriores - Premium',
+      title: 'Liberar anos anteriores',
       subtitle:
-          'Configure limites diferentes para cada ano e consulte o histórico completo!',
-      onUpgrade: () async {
-        Navigator.pop(context);
-        await _activatePremium();
-      },
-      onRestore: () async {
-        Navigator.pop(context);
-        await _restorePremium();
-      },
+          'Escolha um plano para configurar limites diferentes por ano e consultar o historico completo.',
+      onSuccess: _loadSettings,
     );
   }
 
@@ -140,67 +135,12 @@ class _ConfiguracoesPageState extends State<ConfiguracoesPage> {
   }
 
   void _showPremiumPaywall() {
-    showPaywall(
+    showPremiumPaywallFlow(
       context,
       title: 'Alertas avançados',
-      subtitle: 'Configure alertas em 70%, 80%, 95% e muito mais!',
-      onUpgrade: () async {
-        Navigator.pop(context);
-        await _activatePremium();
-      },
-      onRestore: () async {
-        Navigator.pop(context);
-        await _restorePremium();
-      },
+      subtitle: 'Escolha um plano para liberar alertas mais completos e ter mais controle.',
+      onSuccess: _loadSettings,
     );
-  }
-
-  Future<void> _activatePremium() async {
-    try {
-      final purchased = await _entitlementsRepo.purchasePremium();
-      if (!mounted) return;
-
-      if (purchased) {
-        setState(() => _isPremium = true);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Premium ativado com sucesso!'),
-            backgroundColor: Colors.green,
-          ),
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Compra cancelada.')),
-        );
-      }
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Erro ao ativar Premium: $e')));
-    }
-  }
-
-  Future<void> _restorePremium() async {
-    try {
-      final restored = await _entitlementsRepo.restorePurchase();
-      if (!mounted) return;
-      if (restored) {
-        setState(() => _isPremium = true);
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Premium restaurado!')));
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Nenhuma compra encontrada')),
-        );
-      }
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Erro: $e')));
-    }
   }
 
   @override
@@ -338,7 +278,7 @@ class _ConfiguracoesPageState extends State<ConfiguracoesPage> {
                         ),
                         const SizedBox(height: 12),
                         Text(
-                          _isPremium ? 'Premium' : 'Grátis',
+                          _isPremium ? (_planLabel ?? 'Premium') : 'Versao gratuita',
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -351,12 +291,12 @@ class _ConfiguracoesPageState extends State<ConfiguracoesPage> {
                             width: double.infinity,
                             child: ElevatedButton(
                               onPressed: _showPremiumPaywall,
-                              child: const Text('Assinar Premium'),
+                              child: const Text('Ver planos'),
                             ),
                           ),
                         if (_isPremium)
-                          const Text(
-                            'Premium ativo e vinculado à compra da loja.',
+                          Text(
+                            'Versao completa ativa e vinculada a compra da loja.',
                             style: TextStyle(color: Colors.green),
                           ),
                         const SizedBox(height: 12),

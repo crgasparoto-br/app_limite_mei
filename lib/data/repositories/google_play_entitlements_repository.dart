@@ -28,7 +28,7 @@ class GooglePlayEntitlementsRepository implements EntitlementsRepository {
   // Mantemos a subscription viva enquanto o repositorio existir.
   // ignore: unused_field
   StreamSubscription<List<PurchaseDetails>>? _purchaseSubscription;
-  ProductDetails? _premiumProduct;
+  final Map<String, ProductDetails> _productsById = {};
   bool _initialized = false;
   bool _storeAvailable = false;
   Completer<bool>? _purchaseCompleter;
@@ -45,28 +45,26 @@ class GooglePlayEntitlementsRepository implements EntitlementsRepository {
 
     _storeAvailable = await _inAppPurchase.isAvailable();
     if (_storeAvailable) {
-      final response = await _inAppPurchase.queryProductDetails({
-        PremiumConfig.premiumProductId,
-      });
+      final response = await _inAppPurchase.queryProductDetails(
+        PremiumConfig.productIds,
+      );
 
       if (response.error != null) {
         throw StateError(
-          'Falha ao consultar produtos da loja: ${response.error!.message}',
+          'Falha ao consultar os planos na Google Play: ${response.error!.message}',
         );
       }
 
-      if (response.notFoundIDs.contains(PremiumConfig.premiumProductId)) {
+      if (response.notFoundIDs.isNotEmpty) {
         throw StateError(
-          'Produto premium nao encontrado. Confirme o ID '
-          '${PremiumConfig.premiumProductId} na Play Console.',
+          'Os planos nao foram encontrados na Play Console: '
+          '${response.notFoundIDs.join(', ')}. '
+          'Confira se eles estao criados, ativos e publicados no mesmo track do app.',
         );
       }
 
       for (final product in response.productDetails) {
-        if (product.id == PremiumConfig.premiumProductId) {
-          _premiumProduct = product;
-          break;
-        }
+        _productsById[product.id] = product;
       }
     }
 
@@ -95,16 +93,20 @@ class GooglePlayEntitlementsRepository implements EntitlementsRepository {
   }
 
   @override
-  Future<bool> purchasePremium() async {
+  Future<bool> purchasePremium(String productId) async {
     await _ensureInitialized();
     if (!_storeAvailable) {
-      throw StateError('Google Play Billing nao esta disponivel neste dispositivo.');
+      throw StateError(
+        'Google Play Billing nao esta disponivel neste dispositivo. '
+        'Para testar compras reais, instale o app pela Play Store em um teste interno ou fechado.',
+      );
     }
 
-    final product = _premiumProduct;
+    final product = _productsById[productId];
     if (product == null) {
       throw StateError(
-        'Produto premium indisponivel. Verifique a configuracao da Play Console.',
+        'Plano indisponivel. Verifique se o produto esta ativo na Play Console '
+        'e se esta publicado para a mesma conta e o mesmo track desta instalacao.',
       );
     }
 
@@ -146,7 +148,10 @@ class GooglePlayEntitlementsRepository implements EntitlementsRepository {
   Future<bool> restorePurchase() async {
     await _ensureInitialized();
     if (!_storeAvailable) {
-      throw StateError('Google Play Billing nao esta disponivel neste dispositivo.');
+      throw StateError(
+        'Google Play Billing nao esta disponivel neste dispositivo. '
+        'A restauracao precisa ser testada em uma instalacao feita pela Play Store.',
+      );
     }
 
     if (_restoreCompleter != null && !_restoreCompleter!.isCompleted) {
@@ -179,7 +184,7 @@ class GooglePlayEntitlementsRepository implements EntitlementsRepository {
   ) async {
     for (final purchaseDetails in purchaseDetailsList) {
       try {
-        if (purchaseDetails.productID != PremiumConfig.premiumProductId) {
+        if (!PremiumConfig.productIds.contains(purchaseDetails.productID)) {
           continue;
         }
 
@@ -239,12 +244,15 @@ class GooglePlayEntitlementsRepository implements EntitlementsRepository {
     final purchaseDate = parsedMillis == null
         ? DateTime.now()
         : DateTime.fromMillisecondsSinceEpoch(parsedMillis);
+    final offer = PremiumConfig.findOffer(purchaseDetails.productID);
 
     await setEntitlements(
       Entitlements(
         isPremium: true,
         dataCompra: purchaseDate,
-        dataExpiracao: null,
+        dataExpiracao: offer?.expirationFrom(purchaseDate),
+        productId: purchaseDetails.productID,
+        planLabel: offer?.planLabel,
       ),
     );
   }

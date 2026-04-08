@@ -2,9 +2,8 @@
 import 'package:uuid/uuid.dart';
 import '../domain/entities/receita.dart';
 import '../domain/usecases/add_receita_usecase.dart';
-import '../domain/repositories/entitlements_repository.dart';
+import '../presentation/widgets/premium_purchase_flow.dart';
 import '../service_locator.dart';
-import '../presentation/widgets/paywall_dialog.dart';
 import '../utils/date_formatters.dart';
 import '../widgets/currency_input_formatter.dart';
 
@@ -98,51 +97,14 @@ class _AddReceitaPageState extends State<AddReceitaPage> {
   }
 
   void _showPaywall() {
-    showPaywall(
+    showPremiumPaywallFlow(
       context,
-      title: 'Limite de lanÃ§amentos atingido',
-      subtitle: 'VocÃª jÃ¡ registrou 120 receitas. Assine Premium para ilimitado!',
-      onUpgrade: () async {
-        Navigator.pop(context);
-        await _activatePremium();
-      },
-      onRestore: () async {
-        Navigator.pop(context);
-        await _restorePremium();
+      title: 'Limite de lancamentos atingido',
+      subtitle: 'Voce ja registrou 120 receitas. Escolha um plano para liberar lancamentos ilimitados.',
+      onSuccess: () async {
+        _showSnackbar('Plano ativado! Agora voce pode adicionar a receita.');
       },
     );
-  }
-
-  Future<void> _activatePremium() async {
-    try {
-      final entitlementsRepo = getIt<EntitlementsRepository>();
-      final purchased = await entitlementsRepo.purchasePremium();
-      if (!mounted) return;
-
-      if (purchased) {
-        _showSnackbar('Premium ativado! Agora voce pode adicionar a receita.');
-      } else {
-        _showSnackbar('Compra cancelada.');
-      }
-    } catch (e) {
-      _showSnackbar('Erro ao ativar Premium: $e');
-    }
-  }
-
-  Future<void> _restorePremium() async {
-    try {
-      final entitlementsRepo = getIt<EntitlementsRepository>();
-      final restored = await entitlementsRepo.restorePurchase();
-      if (mounted) {
-        if (restored) {
-          _showSnackbar('Premium restaurado! Voce pode adicionar a receita.');
-        } else {
-          _showSnackbar('Nenhuma compra encontrada');
-        }
-      }
-    } catch (e) {
-      _showSnackbar('Erro: $e');
-    }
   }
 
   void _showSnackbar(String message) {

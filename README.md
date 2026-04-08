@@ -1,11 +1,11 @@
 ﻿# Limite MEI
 
-Aplicativo Flutter para acompanhar o faturamento anual do MEI, controlar alertas de limite e desbloquear recursos Premium.
+Aplicativo Flutter para acompanhar o faturamento anual do MEI, controlar alertas de limite e liberar recursos extras com planos pagos.
 
 ## Documentos principais
 
 - `PROXIMOS_PASSOS_PLAY_CONSOLE.md`: checklist operacional para subir a versao atual na Google Play
-- `GOOGLE_PLAY_BILLING.md`: configuracao do produto Premium e fluxo de cobranca pela Play Store
+- `GOOGLE_PLAY_BILLING.md`: configuracao dos planos e fluxo de cobranca pela Play Store
 
 ## Stack principal
 
@@ -13,12 +13,12 @@ Aplicativo Flutter para acompanhar o faturamento anual do MEI, controlar alertas
 - SharedPreferences
 - Google Play Billing via `in_app_purchase`
 
-## Premium
+## Planos pagos
 
-O Premium usa compra nao consumivel pela Google Play.
+O app oferece 3 planos pela Google Play:
 
-Produto configurado no app:
+- Mensal: `R$ 9,90` - `br.com.limitemei.premium.mensal`
+- Anual: `R$ 59,90` - `br.com.limitemei.premium.anual`
+- Vitalicio de lancamento: `R$ 99,90` - `br.com.limitemei.premium.vitalicio`
 
-- `br.com.limitemei.premium`
-
-Esse ID precisa ser igual ao produto cadastrado na Play Console.
+Os IDs precisam ser iguais aos produtos cadastrados na Play Console.

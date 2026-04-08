@@ -3,7 +3,7 @@
 import '../domain/entities/comparativo_mensal.dart';
 import '../domain/repositories/entitlements_repository.dart';
 import '../domain/usecases/get_comparativos_usecase.dart';
-import '../presentation/widgets/paywall_dialog.dart';
+import '../presentation/widgets/premium_purchase_flow.dart';
 import '../service_locator.dart';
 
 class ComparativosPage extends StatefulWidget {
@@ -86,17 +86,14 @@ class _ComparativosPageState extends State<ComparativosPage>
   }
 
   void _showPaywall() {
-    showPaywall(
+    showPremiumPaywallFlow(
       context,
-      title: 'Comparativos - Premium',
-      subtitle: 'Compare meses, anos e acompanhe seu ritmo de faturamento!',
-      onUpgrade: () {
-        Navigator.pop(context);
-        Navigator.pop(context);
-      },
-      onRestore: () {
-        Navigator.pop(context);
-        Navigator.pop(context);
+      title: 'Liberar comparativos',
+      subtitle: 'Escolha um plano para comparar meses, anos e acompanhar seu ritmo.',
+      onSuccess: () async {
+        if (!mounted) return;
+        setState(() => _isPremium = true);
+        await _loadComparativos();
       },
     );
   }

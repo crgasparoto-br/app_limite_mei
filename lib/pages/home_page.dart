@@ -4,7 +4,7 @@ import '../data/services/alert_service.dart';
 import '../domain/repositories/entitlements_repository.dart';
 import '../domain/repositories/settings_repository.dart';
 import '../domain/usecases/get_dashboard_usecase.dart';
-import '../presentation/widgets/paywall_dialog.dart';
+import '../presentation/widgets/premium_purchase_flow.dart';
 import '../service_locator.dart';
 import 'add_receita_page.dart';
 import 'comparativos_page.dart';
@@ -162,19 +162,12 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _showAnosAnterioresPaywall() {
-    showPaywall(
+    showPremiumPaywallFlow(
       context,
       title: 'Histórico de anos anteriores',
       subtitle:
-          'Acesse o histórico completo e configure limites diferentes para cada ano!',
-      onUpgrade: () async {
-        Navigator.pop(context);
-        await _activatePremium();
-      },
-      onRestore: () async {
-        Navigator.pop(context);
-        await _restorePremium();
-      },
+          'Escolha um plano para acessar o historico completo e configurar limites por ano.',
+      onSuccess: _loadDashboard,
     );
   }
 
@@ -550,19 +543,12 @@ class _HomePageState extends State<HomePage> {
                       ),
                     );
                   } else {
-                    showPaywall(
+                    showPremiumPaywallFlow(
                       context,
-                      title: 'Relatório mensal - Premium',
+                      title: 'Liberar relatorio mensal',
                       subtitle:
-                          'Entenda seu faturamento por mês com mais profundidade.',
-                      onUpgrade: () async {
-                        Navigator.pop(context);
-                        await _activatePremium();
-                      },
-                      onRestore: () async {
-                        Navigator.pop(context);
-                        await _restorePremium();
-                      },
+                          'Veja seu faturamento por mes com mais profundidade e mais clareza.',
+                      onSuccess: _loadDashboard,
                     );
                   }
                 },
@@ -595,19 +581,12 @@ class _HomePageState extends State<HomePage> {
                       ),
                     );
                   } else {
-                    showPaywall(
+                    showPremiumPaywallFlow(
                       context,
-                      title: 'Comparativos - Premium',
+                      title: 'Liberar comparativos',
                       subtitle:
                           'Compare meses, anos e acompanhe seu ritmo de faturamento.',
-                      onUpgrade: () async {
-                        Navigator.pop(context);
-                        await _activatePremium();
-                      },
-                      onRestore: () async {
-                        Navigator.pop(context);
-                        await _restorePremium();
-                      },
+                      onSuccess: _loadDashboard,
                     );
                   }
                 },
@@ -635,71 +614,13 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _showReceitaLimitPaywall() {
-    showPaywall(
+    showPremiumPaywallFlow(
       context,
       title: 'Limite de lançamentos atingido',
       subtitle:
-          'Você já registrou 120 receitas. Assine Premium para ilimitado!',
-      onUpgrade: () async {
-        Navigator.pop(context);
-        await _activatePremium();
-      },
-      onRestore: () async {
-        Navigator.pop(context);
-        await _restorePremium();
-      },
+          'Voce ja registrou 120 receitas. Escolha um plano para continuar lancando sem limite.',
+      onSuccess: _loadDashboard,
     );
-  }
-
-  Future<void> _activatePremium() async {
-    try {
-      final entitlementsRepo = getIt<EntitlementsRepository>();
-      final purchased = await entitlementsRepo.purchasePremium();
-      if (!mounted) return;
-
-      if (purchased) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Premium ativado com sucesso!'),
-            backgroundColor: Colors.green,
-          ),
-        );
-        await _loadDashboard();
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Compra cancelada.')),
-        );
-      }
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Erro ao ativar Premium: $e')));
-    }
-  }
-
-  Future<void> _restorePremium() async {
-    try {
-      final entitlementsRepo = getIt<EntitlementsRepository>();
-      final restored = await entitlementsRepo.restorePurchase();
-      if (!mounted) return;
-
-      if (restored) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Premium restaurado!')));
-        await _loadDashboard();
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Nenhuma compra encontrada')),
-        );
-      }
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Erro: $e')));
-    }
   }
 
   String _formatCurrency(double value) {
