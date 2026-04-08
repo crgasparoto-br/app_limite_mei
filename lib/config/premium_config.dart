@@ -3,6 +3,7 @@
 class PremiumConfig {
   const PremiumConfig._();
 
+  static const String androidPackageName = 'br.com.limitemei';
   static const String monthlyProductId = 'br.com.limitemei.premium.mensal';
   static const String annualProductId = 'br.com.limitemei.premium.anual';
   static const String lifetimeProductId = 'br.com.limitemei.premium.vitalicio';

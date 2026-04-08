@@ -1,5 +1,7 @@
 ﻿import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
+import '../config/premium_config.dart';
 import '../domain/entities/app_settings.dart';
 import '../domain/repositories/entitlements_repository.dart';
 import '../domain/repositories/settings_repository.dart';
@@ -23,6 +25,7 @@ class _ConfiguracoesPageState extends State<ConfiguracoesPage> {
   bool _loading = true;
   int _anoSelecionado = DateTime.now().year;
   String? _planLabel;
+  String? _productId;
 
   @override
   void initState() {
@@ -42,6 +45,7 @@ class _ConfiguracoesPageState extends State<ConfiguracoesPage> {
         _settings = settings;
         _isPremium = entitlements.isActive;
         _planLabel = entitlements.planLabel;
+        _productId = entitlements.productId;
         _loading = false;
       });
     } catch (_) {
@@ -141,6 +145,44 @@ class _ConfiguracoesPageState extends State<ConfiguracoesPage> {
       subtitle: 'Escolha um plano para liberar alertas mais completos e ter mais controle.',
       onSuccess: _loadSettings,
     );
+  }
+
+  bool get _hasManageableSubscription {
+    return _productId == PremiumConfig.monthlyProductId ||
+        _productId == PremiumConfig.annualProductId;
+  }
+
+  Future<void> _gerenciarAssinatura() async {
+    final productId = _productId;
+    if (productId == null) return;
+
+    final specificUri = Uri.parse(
+      'https://play.google.com/store/account/subscriptions?sku=$productId&package=${PremiumConfig.androidPackageName}',
+    );
+    final genericUri = Uri.parse(
+      'https://play.google.com/store/account/subscriptions',
+    );
+
+    final opened = await launchUrl(
+      specificUri,
+      mode: LaunchMode.externalApplication,
+    );
+    if (opened) return;
+
+    final fallbackOpened = await launchUrl(
+      genericUri,
+      mode: LaunchMode.externalApplication,
+    );
+
+    if (!fallbackOpened && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Não foi possível abrir o gerenciamento da assinatura na Play Store.',
+          ),
+        ),
+      );
+    }
   }
 
   @override
@@ -297,8 +339,25 @@ class _ConfiguracoesPageState extends State<ConfiguracoesPage> {
                         if (_isPremium)
                           Text(
                             'Versão completa ativa e vinculada à compra da loja.',
-                            style: TextStyle(color: Colors.green),
+                            style: const TextStyle(color: Colors.green),
                           ),
+                        if (_hasManageableSubscription) ...[
+                          const SizedBox(height: 12),
+                          SizedBox(
+                            width: double.infinity,
+                            child: OutlinedButton(
+                              onPressed: _gerenciarAssinatura,
+                              child: const Text(
+                                'Gerenciar ou cancelar assinatura',
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          const Text(
+                            'O cancelamento é feito pela Google Play. O acesso continua até o fim do período já pago.',
+                            style: TextStyle(color: Colors.grey),
+                          ),
+                        ],
                         const SizedBox(height: 12),
                         const Text(
                           'Backup em nuvem está temporariamente indisponível nesta versão.',
