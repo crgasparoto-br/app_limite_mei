@@ -95,8 +95,8 @@ class _ReceitasPageState extends State<ReceitasPage> {
   void _showFiltroPaywall() {
     showPremiumPaywallFlow(
       context,
-      title: 'Liberar filtro por mes',
-      subtitle: 'Escolha um plano para filtrar suas receitas por mes e ter mais controle.',
+      title: 'Liberar filtro por mês',
+      subtitle: 'Escolha um plano para filtrar suas receitas por mês e ter mais controle.',
       onSuccess: _refreshPremiumState,
     );
   }
@@ -120,7 +120,7 @@ class _ReceitasPageState extends State<ReceitasPage> {
     showPremiumPaywallFlow(
       context,
       title: 'Histórico de anos anteriores',
-      subtitle: 'Escolha um plano para acessar o historico completo de todos os anos.',
+      subtitle: 'Escolha um plano para acessar o histórico completo de todos os anos.',
       onSuccess: _refreshPremiumState,
     );
   }
@@ -169,7 +169,7 @@ class _ReceitasPageState extends State<ReceitasPage> {
     showPremiumPaywallFlow(
       context,
       title: 'Edição bloqueada',
-      subtitle: 'Voce atingiu o limite de 120 receitas na versao gratuita. Escolha um plano para editar todas as suas receitas!',
+      subtitle: 'Você atingiu o limite de 120 receitas na versão gratuita. Escolha um plano para editar todas as suas receitas!',
       onSuccess: _refreshPremiumState,
     );
   }
@@ -272,7 +272,7 @@ class _ReceitasPageState extends State<ReceitasPage> {
   void _showExportPaywall() {
     showPremiumPaywallFlow(
       context,
-      title: 'Liberar exportacao',
+      title: 'Liberar exportação',
       subtitle: 'Escolha um plano para exportar suas receitas em CSV ou PDF.',
       onSuccess: _refreshPremiumState,
     );
@@ -373,7 +373,7 @@ class _ReceitasPageState extends State<ReceitasPage> {
               Icons.file_download,
               color: _isPremium ? Colors.blue : Colors.grey,
             ),
-            tooltip: _isPremium ? 'Exportar' : 'Exportar com a versao completa',
+            tooltip: _isPremium ? 'Exportar' : 'Exportar com a versão completa',
             onPressed: _exportarReceitas,
           ),
         ],
@@ -398,7 +398,7 @@ class _ReceitasPageState extends State<ReceitasPage> {
                           isExpanded: true,
                           value: _mesFiltro,
                           hint: Text(
-                            'Filtrar por mes${_isPremium ? '' : ' (versao completa)'}',
+                            'Filtrar por mês${_isPremium ? '' : ' (versão completa)'}',
                             style: TextStyle(
                               color: _isPremium ? Colors.black87 : Colors.grey,
                             ),

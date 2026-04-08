@@ -57,9 +57,9 @@ class GooglePlayEntitlementsRepository implements EntitlementsRepository {
 
       if (response.notFoundIDs.isNotEmpty) {
         throw StateError(
-          'Os planos nao foram encontrados na Play Console: '
+          'Os planos não foram encontrados na Play Console: '
           '${response.notFoundIDs.join(', ')}. '
-          'Confira se eles estao criados, ativos e publicados no mesmo track do app.',
+          'Confira se eles estão criados, ativos e publicados no mesmo track do app.',
         );
       }
 
@@ -97,7 +97,7 @@ class GooglePlayEntitlementsRepository implements EntitlementsRepository {
     await _ensureInitialized();
     if (!_storeAvailable) {
       throw StateError(
-        'Google Play Billing nao esta disponivel neste dispositivo. '
+        'Google Play Billing não está disponível neste dispositivo. '
         'Para testar compras reais, instale o app pela Play Store em um teste interno ou fechado.',
       );
     }
@@ -105,13 +105,13 @@ class GooglePlayEntitlementsRepository implements EntitlementsRepository {
     final product = _productsById[productId];
     if (product == null) {
       throw StateError(
-        'Plano indisponivel. Verifique se o produto esta ativo na Play Console '
-        'e se esta publicado para a mesma conta e o mesmo track desta instalacao.',
+        'Plano indisponível. Verifique se o produto está ativo na Play Console '
+        'e se está publicado para a mesma conta e o mesmo track desta instalação.',
       );
     }
 
     if (_purchaseCompleter != null && !_purchaseCompleter!.isCompleted) {
-      throw StateError('Ja existe uma compra em andamento.');
+      throw StateError('Já existe uma compra em andamento.');
     }
 
     final completer = Completer<bool>();
@@ -149,13 +149,13 @@ class GooglePlayEntitlementsRepository implements EntitlementsRepository {
     await _ensureInitialized();
     if (!_storeAvailable) {
       throw StateError(
-        'Google Play Billing nao esta disponivel neste dispositivo. '
-        'A restauracao precisa ser testada em uma instalacao feita pela Play Store.',
+        'Google Play Billing não está disponível neste dispositivo. '
+        'A restauração precisa ser testada em uma instalação feita pela Play Store.',
       );
     }
 
     if (_restoreCompleter != null && !_restoreCompleter!.isCompleted) {
-      throw StateError('Ja existe uma restauracao em andamento.');
+      throw StateError('Já existe uma restauração em andamento.');
     }
 
     final completer = Completer<bool>();

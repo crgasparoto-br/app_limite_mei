@@ -112,7 +112,7 @@ class _ConfiguracoesPageState extends State<ConfiguracoesPage> {
       context,
       title: 'Liberar anos anteriores',
       subtitle:
-          'Escolha um plano para configurar limites diferentes por ano e consultar o historico completo.',
+          'Escolha um plano para configurar limites diferentes por ano e consultar o histórico completo.',
       onSuccess: _loadSettings,
     );
   }
@@ -278,7 +278,7 @@ class _ConfiguracoesPageState extends State<ConfiguracoesPage> {
                         ),
                         const SizedBox(height: 12),
                         Text(
-                          _isPremium ? (_planLabel ?? 'Premium') : 'Versao gratuita',
+                          _isPremium ? (_planLabel ?? 'Premium') : 'Versão gratuita',
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -296,7 +296,7 @@ class _ConfiguracoesPageState extends State<ConfiguracoesPage> {
                           ),
                         if (_isPremium)
                           Text(
-                            'Versao completa ativa e vinculada a compra da loja.',
+                            'Versão completa ativa e vinculada à compra da loja.',
                             style: TextStyle(color: Colors.green),
                           ),
                         const SizedBox(height: 12),

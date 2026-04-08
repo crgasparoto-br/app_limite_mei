@@ -31,7 +31,7 @@ O codigo usa esse ID em `lib/config/premium_config.dart`.
 4. Crie o produto no app `br.com.limitemei.premium.vitalicio`
 5. Defina os precos:
 6. Mensal: `R$ 9,90`
-7. Anual: `R$ 59,90`
+7. Anual: `12x de R$ 6,90`
 8. Vitalicio de lancamento: `R$ 99,90`
 9. Ative os 3 produtos
 10. Publique a alteracao da configuracao no track de teste que voce estiver usando
@@ -47,8 +47,8 @@ O codigo usa esse ID em `lib/config/premium_config.dart`.
 ### Plano anual
 
 - Nome: `Plano Anual`
-- Descricao curta: `Melhor custo-beneficio para acompanhar o ano inteiro`
-- Descricao completa: `A melhor escolha para economizar e acompanhar seu faturamento ao longo do ano. Libera todos os recursos extras do app com mais economia.`
+- Descricao curta: `Acompanhe o ano inteiro com 12 parcelas de 6,90`
+- Descricao completa: `A melhor escolha para acompanhar seu faturamento ao longo do ano com pagamento em 12 parcelas de R$ 6,90. Libera todos os recursos extras do app com previsibilidade no custo.`
 
 ### Plano vitalicio
 

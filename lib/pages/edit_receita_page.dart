@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
+
 import '../domain/entities/receita.dart';
 import '../domain/usecases/update_receita_usecase.dart';
 import '../service_locator.dart';
@@ -26,10 +27,14 @@ class _EditReceitaPageState extends State<EditReceitaPage> {
   void initState() {
     super.initState();
     _updateReceita = getIt<UpdateReceitaUseCase>();
-    
-    // Pré-preencher com dados existentes
-    _valorCtrl = TextEditingController(text: _formatValorInput(widget.receita.valor));
-    _descricaoCtrl = TextEditingController(text: widget.receita.descricao ?? '');
+
+    // Pré-preencher com dados existentes.
+    _valorCtrl = TextEditingController(
+      text: _formatValorInput(widget.receita.valor),
+    );
+    _descricaoCtrl = TextEditingController(
+      text: widget.receita.descricao ?? '',
+    );
     _dataSelecionada = widget.receita.data;
   }
 
@@ -41,7 +46,6 @@ class _EditReceitaPageState extends State<EditReceitaPage> {
   }
 
   String _formatValorInput(double value) {
-    // Formatar para formato brasileiro: 1500.50 -> 1.500,50
     final parts = value.toStringAsFixed(2).split('.');
     final intPart = int.parse(parts[0]);
     final intFormatted = intPart.toString().replaceAllMapped(
@@ -52,7 +56,6 @@ class _EditReceitaPageState extends State<EditReceitaPage> {
   }
 
   Future<void> _salvar() async {
-    // Validar valor
     if (_valorCtrl.text.trim().isEmpty) {
       _showSnackbar('Informe o valor');
       return;
@@ -64,11 +67,14 @@ class _EditReceitaPageState extends State<EditReceitaPage> {
       return;
     }
 
-    // Validar data não futura
     final hoje = DateTime.now();
     final hojeSemHora = DateTime(hoje.year, hoje.month, hoje.day);
-    final dataSelecionadaSemHora = DateTime(_dataSelecionada.year, _dataSelecionada.month, _dataSelecionada.day);
-    
+    final dataSelecionadaSemHora = DateTime(
+      _dataSelecionada.year,
+      _dataSelecionada.month,
+      _dataSelecionada.day,
+    );
+
     if (dataSelecionadaSemHora.isAfter(hojeSemHora)) {
       _showSnackbar('A data não pode ser futura');
       return;
@@ -92,10 +98,8 @@ class _EditReceitaPageState extends State<EditReceitaPage> {
 
       if (!result.success) {
         _showSnackbar(result.error ?? 'Erro ao salvar');
-      } else {
-        if (mounted) {
-          Navigator.pop(context, true);
-        }
+      } else if (mounted) {
+        Navigator.pop(context, true);
       }
     } catch (e) {
       _showSnackbar('Erro: $e');
@@ -107,9 +111,9 @@ class _EditReceitaPageState extends State<EditReceitaPage> {
   }
 
   void _showSnackbar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   Future<void> _escolherData() async {
@@ -158,7 +162,9 @@ class _EditReceitaPageState extends State<EditReceitaPage> {
           children: [
             TextField(
               controller: _valorCtrl,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
               inputFormatters: [BrCurrencyInputFormatter()],
               decoration: const InputDecoration(
                 labelText: 'Valor (R\$)',

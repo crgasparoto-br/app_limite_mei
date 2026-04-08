@@ -48,13 +48,13 @@ class _AddReceitaPageState extends State<AddReceitaPage> {
       return;
     }
 
-    // Validar data nÃ£o futura
+    // Validar data não futura
     final hoje = DateTime.now();
     final hojeSemHora = DateTime(hoje.year, hoje.month, hoje.day);
     final dataSelecionadaSemHora = DateTime(_dataSelecionada.year, _dataSelecionada.month, _dataSelecionada.day);
     
     if (dataSelecionadaSemHora.isAfter(hojeSemHora)) {
-      _showSnackbar('A data nÃ£o pode ser futura');
+      _showSnackbar('A data não pode ser futura');
       return;
     }
 
@@ -99,10 +99,10 @@ class _AddReceitaPageState extends State<AddReceitaPage> {
   void _showPaywall() {
     showPremiumPaywallFlow(
       context,
-      title: 'Limite de lancamentos atingido',
-      subtitle: 'Voce ja registrou 120 receitas. Escolha um plano para liberar lancamentos ilimitados.',
+      title: 'Limite de lançamentos atingido',
+      subtitle: 'Você já registrou 120 receitas. Escolha um plano para liberar lançamentos ilimitados.',
       onSuccess: () async {
-        _showSnackbar('Plano ativado! Agora voce pode adicionar a receita.');
+        _showSnackbar('Plano ativado! Agora você pode adicionar a receita.');
       },
     );
   }
@@ -178,8 +178,8 @@ class _AddReceitaPageState extends State<AddReceitaPage> {
               controller: _descricaoCtrl,
               maxLines: 3,
               decoration: const InputDecoration(
-                labelText: 'DescriÃ§Ã£o (opcional)',
-                hintText: 'Ex: Venda de produto, ServiÃ§o...',
+                labelText: 'Descrição (opcional)',
+                hintText: 'Ex: Venda de produto, Serviço...',
               ),
             ),
             const Spacer(),

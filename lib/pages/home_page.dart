@@ -166,7 +166,7 @@ class _HomePageState extends State<HomePage> {
       context,
       title: 'Histórico de anos anteriores',
       subtitle:
-          'Escolha um plano para acessar o historico completo e configurar limites por ano.',
+          'Escolha um plano para acessar o histórico completo e configurar limites por ano.',
       onSuccess: _loadDashboard,
     );
   }
@@ -338,7 +338,7 @@ class _HomePageState extends State<HomePage> {
                 Text(
                   '${(percentual * 100).toStringAsFixed(1)}%',
                   style: const TextStyle(
-                    color: Colors.white,
+                    color: Colors.black87,
                     fontWeight: FontWeight.bold,
                     fontSize: 12,
                   ),
@@ -545,9 +545,9 @@ class _HomePageState extends State<HomePage> {
                   } else {
                     showPremiumPaywallFlow(
                       context,
-                      title: 'Liberar relatorio mensal',
+                      title: 'Liberar relatório mensal',
                       subtitle:
-                          'Veja seu faturamento por mes com mais profundidade e mais clareza.',
+                          'Veja seu faturamento por mês com mais profundidade e mais clareza.',
                       onSuccess: _loadDashboard,
                     );
                   }
@@ -618,7 +618,7 @@ class _HomePageState extends State<HomePage> {
       context,
       title: 'Limite de lançamentos atingido',
       subtitle:
-          'Voce ja registrou 120 receitas. Escolha um plano para continuar lancando sem limite.',
+          'Você já registrou 120 receitas. Escolha um plano para continuar lançando sem limite.',
       onSuccess: _loadDashboard,
     );
   }

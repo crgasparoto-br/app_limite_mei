@@ -256,7 +256,9 @@ class _OfferButton extends StatelessWidget {
                           Text(
                             offer.type == PremiumPlanType.lifetime
                                 ? 'pagamento único'
-                                : 'por ${offer.type == PremiumPlanType.monthly ? 'mês' : 'ano'}',
+                                : offer.type == PremiumPlanType.monthly
+                                    ? 'por mês'
+                                    : '12 parcelas',
                             style: Theme.of(context).textTheme.bodySmall
                                 ?.copyWith(color: Colors.grey.shade700),
                           ),

@@ -18,8 +18,8 @@ class PremiumConfig {
     PremiumOffer(
       id: annualProductId,
       title: 'Anual',
-      priceLabel: 'R\$ 59,90',
-      subtitle: 'A melhor escolha para economizar e acompanhar o ano inteiro.',
+      priceLabel: '12x de R\$ 6,90',
+      subtitle: 'A melhor escolha para acompanhar o ano inteiro com parcelas mensais.',
       badge: 'Melhor oferta',
       type: PremiumPlanType.annual,
     ),
