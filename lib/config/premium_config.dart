@@ -1,4 +1,4 @@
-﻿import '../domain/entities/premium_offer.dart';
+import '../domain/entities/premium_offer.dart';
 
 class PremiumConfig {
   const PremiumConfig._();
@@ -12,25 +12,31 @@ class PremiumConfig {
     PremiumOffer(
       id: monthlyProductId,
       title: 'Mensal',
-      priceLabel: 'R\$ 9,90',
-      subtitle: 'Ideal para começar hoje com baixo custo e mais flexibilidade.',
+      totalPriceLabel: 'R\$ 9,99',
+      subtitle: 'Ideal para comecar hoje com baixo custo e mais flexibilidade.',
       type: PremiumPlanType.monthly,
+      chargeLabel: 'cobrado por mes',
     ),
     PremiumOffer(
       id: annualProductId,
       title: 'Anual',
-      priceLabel: '12x de R\$ 6,90',
-      subtitle: 'A melhor escolha para acompanhar o ano inteiro com parcelas mensais.',
+      totalPriceLabel: 'R\$ 83,88',
+      subtitle:
+          'A melhor escolha para acompanhar o ano inteiro com menor custo total.',
       badge: 'Melhor oferta',
       type: PremiumPlanType.annual,
+      breakdownPriceLabel: '12x de R\$ 6,99',
+      chargeLabel: 'cobrado ao longo de 12 parcelas',
     ),
     PremiumOffer(
       id: lifetimeProductId,
-      title: 'Vitalício de lançamento',
-      priceLabel: 'R\$ 99,90',
-      subtitle: 'Garanta o menor custo total com pagamento único e acesso permanente.',
-      badge: 'Lançamento',
+      title: 'Vitalicio de lancamento',
+      totalPriceLabel: 'R\$ 99,99',
+      subtitle:
+          'Garanta o menor custo total com pagamento unico e acesso permanente.',
+      badge: 'Lancamento',
       type: PremiumPlanType.lifetime,
+      chargeLabel: 'pagamento unico',
     ),
   ];
 

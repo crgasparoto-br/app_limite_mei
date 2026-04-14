@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../config/premium_config.dart';
@@ -142,7 +142,8 @@ class _ConfiguracoesPageState extends State<ConfiguracoesPage> {
     showPremiumPaywallFlow(
       context,
       title: 'Alertas avançados',
-      subtitle: 'Escolha um plano para liberar alertas mais completos e ter mais controle.',
+      subtitle:
+          'Escolha um plano para liberar alertas mais completos e ter mais controle.',
       onSuccess: _loadSettings,
     );
   }
@@ -154,20 +155,21 @@ class _ConfiguracoesPageState extends State<ConfiguracoesPage> {
 
   Future<void> _gerenciarAssinatura() async {
     final productId = _productId;
-    if (productId == null) return;
-
-    final specificUri = Uri.parse(
-      'https://play.google.com/store/account/subscriptions?sku=$productId&package=${PremiumConfig.androidPackageName}',
-    );
     final genericUri = Uri.parse(
       'https://play.google.com/store/account/subscriptions',
     );
 
-    final opened = await launchUrl(
-      specificUri,
-      mode: LaunchMode.externalApplication,
-    );
-    if (opened) return;
+    if (productId != null) {
+      final specificUri = Uri.parse(
+        'https://play.google.com/store/account/subscriptions?sku=$productId&package=${PremiumConfig.androidPackageName}',
+      );
+
+      final opened = await launchUrl(
+        specificUri,
+        mode: LaunchMode.externalApplication,
+      );
+      if (opened) return;
+    }
 
     final fallbackOpened = await launchUrl(
       genericUri,
@@ -205,9 +207,7 @@ class _ConfiguracoesPageState extends State<ConfiguracoesPage> {
                           children: [
                             Text(
                               'Limite anual',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .titleMedium
+                              style: Theme.of(context).textTheme.titleMedium
                                   ?.copyWith(fontWeight: FontWeight.bold),
                             ),
                             if (_isPremium)
@@ -293,9 +293,7 @@ class _ConfiguracoesPageState extends State<ConfiguracoesPage> {
                       children: [
                         Text(
                           'Alertas',
-                          style: Theme.of(context)
-                              .textTheme
-                              .titleMedium
+                          style: Theme.of(context).textTheme.titleMedium
                               ?.copyWith(fontWeight: FontWeight.bold),
                         ),
                         const SizedBox(height: 12),
@@ -313,14 +311,14 @@ class _ConfiguracoesPageState extends State<ConfiguracoesPage> {
                       children: [
                         Text(
                           'Plano',
-                          style: Theme.of(context)
-                              .textTheme
-                              .titleMedium
+                          style: Theme.of(context).textTheme.titleMedium
                               ?.copyWith(fontWeight: FontWeight.bold),
                         ),
                         const SizedBox(height: 12),
                         Text(
-                          _isPremium ? (_planLabel ?? 'Premium') : 'Versão gratuita',
+                          _isPremium
+                              ? (_planLabel ?? 'Premium')
+                              : 'Versão gratuita',
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -341,23 +339,23 @@ class _ConfiguracoesPageState extends State<ConfiguracoesPage> {
                             'Versão completa ativa e vinculada à compra da loja.',
                             style: const TextStyle(color: Colors.green),
                           ),
-                        if (_hasManageableSubscription) ...[
-                          const SizedBox(height: 12),
-                          SizedBox(
-                            width: double.infinity,
-                            child: OutlinedButton(
-                              onPressed: _gerenciarAssinatura,
-                              child: const Text(
-                                'Gerenciar ou cancelar assinatura',
-                              ),
+                        const SizedBox(height: 12),
+                        SizedBox(
+                          width: double.infinity,
+                          child: OutlinedButton(
+                            onPressed: _gerenciarAssinatura,
+                            child: Text(
+                              _hasManageableSubscription
+                                  ? 'Gerenciar ou cancelar assinatura'
+                                  : 'Abrir central de assinaturas da Google Play',
                             ),
                           ),
-                          const SizedBox(height: 8),
-                          const Text(
-                            'O cancelamento é feito pela Google Play. O acesso continua até o fim do período já pago.',
-                            style: TextStyle(color: Colors.grey),
-                          ),
-                        ],
+                        ),
+                        const SizedBox(height: 8),
+                        const Text(
+                          'Mensal e Anual sao assinaturas com renovacao automatica ate cancelamento. O gerenciamento e o cancelamento sao feitos pela Google Play, e o acesso continua ate o fim do periodo ja pago.',
+                          style: TextStyle(color: Colors.grey),
+                        ),
                         const SizedBox(height: 12),
                         const Text(
                           'Backup em nuvem está temporariamente indisponível nesta versão.',

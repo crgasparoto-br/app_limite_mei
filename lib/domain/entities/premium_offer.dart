@@ -1,27 +1,142 @@
-enum PremiumPlanType {
-  monthly,
-  annual,
-  lifetime,
-}
+import 'dart:ui';
+
+import 'package:in_app_purchase/in_app_purchase.dart';
+import 'package:in_app_purchase_android/in_app_purchase_android.dart';
+import 'package:intl/intl.dart';
+
+enum PremiumPlanType { monthly, annual, lifetime }
 
 class PremiumOffer {
   const PremiumOffer({
     required this.id,
     required this.title,
-    required this.priceLabel,
+    required this.totalPriceLabel,
     required this.type,
     this.subtitle,
     this.badge,
+    this.breakdownPriceLabel,
+    this.chargeLabel,
   });
 
   final String id;
   final String title;
-  final String priceLabel;
+  final String totalPriceLabel;
   final PremiumPlanType type;
   final String? subtitle;
   final String? badge;
+  final String? breakdownPriceLabel;
+  final String? chargeLabel;
 
   bool get isSubscription => type != PremiumPlanType.lifetime;
+
+  String get actionLabel => isSubscription ? 'Assinar' : 'Comprar';
+
+  String get purchaseTypeLabel =>
+      isSubscription ? 'Assinatura' : 'Compra unica';
+
+  String get effectiveChargeLabel {
+    if (chargeLabel != null) return chargeLabel!;
+
+    switch (type) {
+      case PremiumPlanType.monthly:
+        return 'cobrado por mes';
+      case PremiumPlanType.annual:
+        return 'cobrado por ano';
+      case PremiumPlanType.lifetime:
+        return 'pagamento unico';
+    }
+  }
+
+  String get termsSummary {
+    switch (type) {
+      case PremiumPlanType.monthly:
+        return '$totalPriceLabel por mes com renovacao automatica ate cancelamento.';
+      case PremiumPlanType.annual:
+        final breakdown = breakdownPriceLabel == null
+            ? ''
+            : ' ($breakdownPriceLabel)';
+        return '$totalPriceLabel por ano$breakdown com renovacao automatica ate cancelamento.';
+      case PremiumPlanType.lifetime:
+        return '$totalPriceLabel em pagamento unico, sem renovacao automatica.';
+    }
+  }
+
+  PremiumOffer copyWith({
+    String? id,
+    String? title,
+    String? totalPriceLabel,
+    PremiumPlanType? type,
+    String? subtitle,
+    String? badge,
+    String? breakdownPriceLabel,
+    String? chargeLabel,
+  }) {
+    return PremiumOffer(
+      id: id ?? this.id,
+      title: title ?? this.title,
+      totalPriceLabel: totalPriceLabel ?? this.totalPriceLabel,
+      type: type ?? this.type,
+      subtitle: subtitle ?? this.subtitle,
+      badge: badge ?? this.badge,
+      breakdownPriceLabel: breakdownPriceLabel ?? this.breakdownPriceLabel,
+      chargeLabel: chargeLabel ?? this.chargeLabel,
+    );
+  }
+
+  PremiumOffer resolveWithProduct(ProductDetails? product) {
+    if (product == null) return this;
+
+    if (type == PremiumPlanType.lifetime) {
+      return copyWith(
+        totalPriceLabel: product.price,
+        chargeLabel: 'pagamento unico',
+      );
+    }
+
+    if (product is GooglePlayProductDetails &&
+        product.subscriptionIndex != null &&
+        product.productDetails.subscriptionOfferDetails != null) {
+      final subscriptionDetails = product
+          .productDetails
+          .subscriptionOfferDetails![product.subscriptionIndex!];
+      final pricingPhase = subscriptionDetails.pricingPhases.last;
+      final recurringPrice = pricingPhase.priceAmountMicros / 1000000.0;
+      final commitment = subscriptionDetails.installmentPlanDetails;
+
+      if (commitment != null && commitment.commitmentPaymentsCount > 1) {
+        final total = recurringPrice * commitment.commitmentPaymentsCount;
+        return copyWith(
+          totalPriceLabel: _formatCurrency(
+            total,
+            currencyCode: pricingPhase.priceCurrencyCode,
+            currencySymbol: product.currencySymbol,
+          ),
+          breakdownPriceLabel:
+              '${commitment.commitmentPaymentsCount}x de ${pricingPhase.formattedPrice}',
+          chargeLabel:
+              'compromisso anual em ${commitment.commitmentPaymentsCount} parcelas',
+        );
+      }
+
+      if (pricingPhase.billingPeriod == 'P1Y') {
+        return copyWith(
+          totalPriceLabel: pricingPhase.formattedPrice,
+          breakdownPriceLabel:
+              'equivale a ${_formatCurrency(recurringPrice / 12, currencyCode: pricingPhase.priceCurrencyCode, currencySymbol: product.currencySymbol)} por mes',
+          chargeLabel: 'cobrado por ano',
+        );
+      }
+
+      if (pricingPhase.billingPeriod == 'P1M') {
+        return copyWith(
+          totalPriceLabel: pricingPhase.formattedPrice,
+          chargeLabel: 'cobrado por mes',
+        );
+      }
+    }
+
+    return copyWith(totalPriceLabel: product.price);
+  }
 
   DateTime? expirationFrom(DateTime purchaseDate) {
     switch (type) {
@@ -59,7 +174,24 @@ class PremiumOffer {
       case PremiumPlanType.annual:
         return 'Anual';
       case PremiumPlanType.lifetime:
-        return 'Vitalício';
+        return 'Vitalicio';
     }
+  }
+
+  static String _formatCurrency(
+    double value, {
+    required String currencyCode,
+    required String currencySymbol,
+  }) {
+    final locale =
+        Intl.defaultLocale ?? PlatformDispatcher.instance.locale.toString();
+    final formatter = NumberFormat.currency(
+      locale: locale.isEmpty ? 'pt_BR' : locale,
+      name: currencyCode,
+      symbol: currencySymbol,
+      decimalDigits: 2,
+    );
+
+    return formatter.format(value).replaceAll('\u00A0', ' ');
   }
 }

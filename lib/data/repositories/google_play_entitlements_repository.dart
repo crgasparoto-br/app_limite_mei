@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../config/premium_config.dart';
 import '../../domain/entities/entitlements.dart';
+import '../../domain/entities/premium_offer.dart';
 import '../../domain/repositories/entitlements_repository.dart';
 
 class GooglePlayEntitlementsRepository implements EntitlementsRepository {
@@ -69,6 +70,19 @@ class GooglePlayEntitlementsRepository implements EntitlementsRepository {
     }
 
     _initialized = true;
+  }
+
+  @override
+  Future<List<PremiumOffer>> getAvailableOffers() async {
+    try {
+      await _ensureInitialized();
+    } catch (_) {
+      return PremiumConfig.offers;
+    }
+
+    return PremiumConfig.offers
+        .map((offer) => offer.resolveWithProduct(_productsById[offer.id]))
+        .toList(growable: false);
   }
 
   @override
@@ -194,7 +208,8 @@ class GooglePlayEntitlementsRepository implements EntitlementsRepository {
           case PurchaseStatus.purchased:
           case PurchaseStatus.restored:
             await _grantPremium(purchaseDetails);
-            if (_purchaseCompleter != null && !_purchaseCompleter!.isCompleted) {
+            if (_purchaseCompleter != null &&
+                !_purchaseCompleter!.isCompleted) {
               _purchaseCompleter!.complete(true);
             }
             if (_restoreCompleter != null && !_restoreCompleter!.isCompleted) {
@@ -202,7 +217,8 @@ class GooglePlayEntitlementsRepository implements EntitlementsRepository {
             }
             break;
           case PurchaseStatus.canceled:
-            if (_purchaseCompleter != null && !_purchaseCompleter!.isCompleted) {
+            if (_purchaseCompleter != null &&
+                !_purchaseCompleter!.isCompleted) {
               _purchaseCompleter!.complete(false);
             }
             if (_restoreCompleter != null && !_restoreCompleter!.isCompleted) {
@@ -213,7 +229,8 @@ class GooglePlayEntitlementsRepository implements EntitlementsRepository {
             final message =
                 purchaseDetails.error?.message ?? 'Falha ao processar compra.';
             final error = StateError(message);
-            if (_purchaseCompleter != null && !_purchaseCompleter!.isCompleted) {
+            if (_purchaseCompleter != null &&
+                !_purchaseCompleter!.isCompleted) {
               _purchaseCompleter!.completeError(error);
             }
             if (_restoreCompleter != null && !_restoreCompleter!.isCompleted) {
@@ -257,4 +274,3 @@ class GooglePlayEntitlementsRepository implements EntitlementsRepository {
     );
   }
 }
-

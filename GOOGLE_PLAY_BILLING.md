@@ -30,11 +30,12 @@ O codigo usa esse ID em `lib/config/premium_config.dart`.
 3. Crie as assinaturas `br.com.limitemei.premium.mensal` e `br.com.limitemei.premium.anual`
 4. Crie o produto no app `br.com.limitemei.premium.vitalicio`
 5. Defina os precos:
-6. Mensal: `R$ 9,90`
-7. Anual: `12x de R$ 6,90`
-8. Vitalicio de lancamento: `R$ 99,90`
-9. Ative os 3 produtos
-10. Publique a alteracao da configuracao no track de teste que voce estiver usando
+6. Mensal: `R$ 9,99`
+7. Anual: `R$ 83,88` no total
+8. Se o plano anual continuar em 12 parcelas, mostrar no app `12x de R$ 6,99` apenas como apoio, sempre com o total em mais destaque
+9. Vitalicio de lancamento: `R$ 99,99`
+10. Ative os 3 produtos
+11. Publique a alteracao da configuracao no track de teste que voce estiver usando
 
 ## Textos sugeridos para a Play Console
 
@@ -47,8 +48,8 @@ O codigo usa esse ID em `lib/config/premium_config.dart`.
 ### Plano anual
 
 - Nome: `Plano Anual`
-- Descricao curta: `Acompanhe o ano inteiro com 12 parcelas de 6,90`
-- Descricao completa: `A melhor escolha para acompanhar seu faturamento ao longo do ano com pagamento em 12 parcelas de R$ 6,90. Libera todos os recursos extras do app com previsibilidade no custo.`
+- Descricao curta: `Acompanhe o ano inteiro por R$ 83,88 no total`
+- Descricao completa: `A melhor escolha para acompanhar seu faturamento ao longo do ano por R$ 83,88 no total. Se quiser, informe no app a equivalencia de 12x de R$ 6,99, sempre com o valor total em maior destaque.`
 
 ### Plano vitalicio
 
@@ -69,7 +70,10 @@ O codigo usa esse ID em `lib/config/premium_config.dart`.
 ## Checklist do fluxo no app
 
 - O paywall deve abrir sem cortar as opcoes em telas menores
-- Os 3 cards devem aparecer com preco, descricao e CTA
+- Os 3 cards devem aparecer com preco total, descricao e CTA correto
+- O plano anual deve destacar `R$ 83,88` no total e deixar qualquer equivalencia de `12x de R$ 6,99` apenas como apoio visual
+- As assinaturas devem informar renovacao automatica e como o usuario gerencia ou cancela pela Google Play
+- O usuario deve enxergar claramente que pode continuar na versao gratuita
 - O plano comprado deve liberar os recursos imediatamente
 - O texto do plano ativo deve aparecer em `Configuracoes`
 - `Restaurar compra` deve recuperar o acesso na mesma conta da loja

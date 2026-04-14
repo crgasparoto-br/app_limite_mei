@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 
 import '../../config/premium_config.dart';
 import '../../domain/entities/premium_offer.dart';
@@ -8,8 +8,8 @@ class PaywallDialog extends StatelessWidget {
     super.key,
     this.title = 'Tenha mais controle do seu limite MEI',
     this.subtitle =
-        'Libere análises, alertas extras e histórico completo para acompanhar seu faturamento com mais segurança.',
-    this.dismissLabel = 'Agora não',
+        'Libere analises, alertas extras e historico completo para acompanhar seu faturamento com mais seguranca.',
+    this.dismissLabel = 'Continuar na versao gratuita',
     this.offers = PremiumConfig.offers,
     required this.onUpgrade,
     this.onRestore,
@@ -24,10 +24,10 @@ class PaywallDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final maxHeight = MediaQuery.of(context).size.height * 0.85;
+    final maxHeight = MediaQuery.of(context).size.height * 0.88;
 
     return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: ConstrainedBox(
         constraints: BoxConstraints(maxHeight: maxHeight),
         child: SingleChildScrollView(
@@ -41,44 +41,40 @@ class PaywallDialog extends StatelessWidget {
                   color: Colors.blue.shade100,
                   shape: BoxShape.circle,
                 ),
-                child: Icon(
-                  Icons.star,
-                  size: 32,
-                  color: Colors.blue.shade700,
-                ),
+                child: Icon(Icons.star, size: 32, color: Colors.blue.shade700),
               ),
               const SizedBox(height: 16),
               Text(
                 title,
                 textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),
               Text(
                 subtitle,
                 textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Colors.grey.shade600,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(color: Colors.grey.shade700),
               ),
               const SizedBox(height: 24),
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
                   color: Colors.green.shade50,
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: Colors.green.shade100),
                 ),
                 child: Text(
-                  'Escolha a opção que faz mais sentido para o seu momento.',
+                  'Assinatura opcional. Voce pode continuar usando a versao gratuita e liberar os recursos extras somente se quiser.',
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Colors.green.shade800,
-                        fontWeight: FontWeight.w600,
-                      ),
+                    color: Colors.green.shade800,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
               const SizedBox(height: 20),
@@ -93,12 +89,14 @@ class PaywallDialog extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 4),
+              _TermsNotice(offers: offers),
+              const SizedBox(height: 16),
               SizedBox(
                 width: double.infinity,
-                child: TextButton(
+                child: OutlinedButton(
                   onPressed: () => Navigator.pop(context),
-                child: Text(dismissLabel ?? 'Agora não'),
+                  child: Text(dismissLabel ?? 'Continuar na versao gratuita'),
                 ),
               ),
               if (onRestore != null)
@@ -127,8 +125,8 @@ class _FeatureList extends StatelessWidget {
   Widget build(BuildContext context) {
     const features = [
       'Lance receitas sem limite',
-      'Filtre e consulte por mês com rapidez',
-      'Veja relatórios mensais mais detalhados',
+      'Filtre e consulte por mes com rapidez',
+      'Veja relatorios mensais mais detalhados',
       'Compare meses e anos em segundos',
       'Acompanhe seu ritmo antes de estourar o teto',
       'Receba alertas extras ao longo do ano',
@@ -165,10 +163,7 @@ class _FeatureList extends StatelessWidget {
 }
 
 class _OfferButton extends StatelessWidget {
-  const _OfferButton({
-    required this.offer,
-    required this.onTap,
-  });
+  const _OfferButton({required this.offer, required this.onTap});
 
   final PremiumOffer offer;
   final VoidCallback onTap;
@@ -192,8 +187,10 @@ class _OfferButton extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(
                     child: Column(
@@ -236,47 +233,75 @@ class _OfferButton extends StatelessWidget {
                     ),
                 ],
               ),
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 5,
+                ),
+                decoration: BoxDecoration(
+                  color: offer.isSubscription
+                      ? Colors.blue.shade100
+                      : Colors.orange.shade100,
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Text(
+                  offer.purchaseTypeLabel,
+                  style: TextStyle(
+                    color: offer.isSubscription
+                        ? Colors.blue.shade900
+                        : Colors.orange.shade900,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
               const SizedBox(height: 14),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Expanded(
-                    child: FittedBox(
-                      alignment: Alignment.centerLeft,
-                      fit: BoxFit.scaleDown,
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            offer.priceLabel,
-                            style: Theme.of(context).textTheme.titleLarge
-                                ?.copyWith(fontWeight: FontWeight.bold),
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            offer.type == PremiumPlanType.lifetime
-                                ? 'pagamento único'
-                                : offer.type == PremiumPlanType.monthly
-                                    ? 'por mês'
-                                    : '12 parcelas',
-                            style: Theme.of(context).textTheme.bodySmall
-                                ?.copyWith(color: Colors.grey.shade700),
-                          ),
-                        ],
-                      ),
-                    ),
+              Text(
+                offer.totalPriceLabel,
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey.shade900,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                offer.effectiveChargeLabel,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: Colors.grey.shade800,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              if (offer.breakdownPriceLabel != null) ...[
+                const SizedBox(height: 4),
+                Text(
+                  offer.breakdownPriceLabel!,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(color: Colors.grey.shade700),
+                ),
+              ],
+              const SizedBox(height: 10),
+              Text(
+                offer.isSubscription
+                    ? 'Renovacao automatica ate cancelamento.'
+                    : 'Pagamento unico. Sem renovacao automatica.',
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: Colors.grey.shade700),
+              ),
+              const SizedBox(height: 14),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: onTap,
+                  style: ElevatedButton.styleFrom(
+                    minimumSize: const Size.fromHeight(44),
+                    backgroundColor: Colors.blue,
+                    foregroundColor: Colors.white,
                   ),
-                  const SizedBox(width: 12),
-                  ElevatedButton(
-                    onPressed: onTap,
-                    style: ElevatedButton.styleFrom(
-                      minimumSize: const Size(92, 40),
-                      backgroundColor: Colors.blue,
-                      foregroundColor: Colors.white,
-                    ),
-                    child: const Text('Assinar'),
-                  ),
-                ],
+                  child: Text(offer.actionLabel),
+                ),
               ),
             ],
           ),
@@ -286,11 +311,94 @@ class _OfferButton extends StatelessWidget {
   }
 }
 
+class _TermsNotice extends StatelessWidget {
+  const _TermsNotice({required this.offers});
+
+  final List<PremiumOffer> offers;
+
+  PremiumOffer? _findOffer(PremiumPlanType type) {
+    for (final offer in offers) {
+      if (offer.type == type) return offer;
+    }
+
+    return null;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final monthlyOffer = _findOffer(PremiumPlanType.monthly);
+    final annualOffer = _findOffer(PremiumPlanType.annual);
+    final lifetimeOffer = _findOffer(PremiumPlanType.lifetime);
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade50,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Informacoes importantes',
+            style: Theme.of(
+              context,
+            ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Os recursos premium sao opcionais. O app continua disponivel na versao gratuita.',
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: Colors.grey.shade800),
+          ),
+          if (monthlyOffer != null) ...[
+            const SizedBox(height: 6),
+            Text(
+              'Mensal: ${monthlyOffer.termsSummary}',
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: Colors.grey.shade800),
+            ),
+          ],
+          if (annualOffer != null) ...[
+            const SizedBox(height: 6),
+            Text(
+              'Anual: ${annualOffer.termsSummary}',
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: Colors.grey.shade800),
+            ),
+          ],
+          if (lifetimeOffer != null) ...[
+            const SizedBox(height: 6),
+            Text(
+              'Vitalicio: ${lifetimeOffer.termsSummary}',
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: Colors.grey.shade800),
+            ),
+          ],
+          const SizedBox(height: 6),
+          Text(
+            'Voce pode gerenciar ou cancelar assinaturas pela Google Play na tela de Configuracoes do app.',
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: Colors.grey.shade800),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 Future<bool?> showPaywall(
   BuildContext context, {
   String title = 'Tenha mais controle do seu limite MEI',
   String subtitle =
-      'Libere análises, alertas extras e histórico completo para acompanhar seu faturamento com mais segurança.',
+      'Libere analises, alertas extras e historico completo para acompanhar seu faturamento com mais seguranca.',
   List<PremiumOffer> offers = PremiumConfig.offers,
   required ValueChanged<PremiumOffer> onUpgrade,
   VoidCallback? onRestore,

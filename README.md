@@ -17,8 +17,9 @@ Aplicativo Flutter para acompanhar o faturamento anual do MEI, controlar alertas
 
 O app oferece 3 planos pela Google Play:
 
-- Mensal: `R$ 9,90` - `br.com.limitemei.premium.mensal`
-- Anual: `12x de R$ 6,90` - `br.com.limitemei.premium.anual`
-- Vitalicio de lancamento: `R$ 99,90` - `br.com.limitemei.premium.vitalicio`
+- Mensal: `R$ 9,99` - `br.com.limitemei.premium.mensal`
+- Anual: `R$ 83,88 no total` - `br.com.limitemei.premium.anual`
+- Equivalencia exibida: `12x de R$ 6,99`
+- Vitalicio de lancamento: `R$ 99,99` - `br.com.limitemei.premium.vitalicio`
 
 Os IDs precisam ser iguais aos produtos cadastrados na Play Console.

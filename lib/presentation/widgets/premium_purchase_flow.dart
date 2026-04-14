@@ -9,10 +9,19 @@ import 'paywall_dialog.dart';
 Future<void> showPremiumPaywallFlow(
   BuildContext context, {
   required Future<void> Function() onSuccess,
-  String title = 'Evite estourar o limite com mais segurança',
+  String title = 'Evite estourar o limite com mais seguranca',
   String subtitle = 'Escolha um plano para liberar todos os recursos',
 }) async {
   final repo = getIt<EntitlementsRepository>();
+  List<PremiumOffer> offers = PremiumConfig.offers;
+
+  try {
+    offers = await repo.getAvailableOffers();
+  } catch (_) {
+    offers = PremiumConfig.offers;
+  }
+
+  if (!context.mounted) return;
 
   void handlePurchase(PremiumOffer offer) async {
     Navigator.of(context).pop();
@@ -71,7 +80,7 @@ Future<void> showPremiumPaywallFlow(
     context,
     title: title,
     subtitle: subtitle,
-    offers: PremiumConfig.offers,
+    offers: offers,
     onUpgrade: handlePurchase,
     onRestore: handleRestore,
   );

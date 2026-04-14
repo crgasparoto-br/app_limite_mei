@@ -1,6 +1,9 @@
-﻿import '../entities/entitlements.dart';
+import '../entities/entitlements.dart';
+import '../entities/premium_offer.dart';
 
 abstract class EntitlementsRepository {
+  Future<List<PremiumOffer>> getAvailableOffers();
+
   Future<Entitlements> getEntitlements();
 
   Future<void> setEntitlements(Entitlements entitlements);
