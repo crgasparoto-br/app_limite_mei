@@ -9,7 +9,7 @@ import 'paywall_dialog.dart';
 Future<void> showPremiumPaywallFlow(
   BuildContext context, {
   required Future<void> Function() onSuccess,
-  String title = 'Evite estourar o limite com mais seguranca',
+  String title = 'Evite estourar o limite com mais segurança',
   String subtitle = 'Escolha um plano para liberar todos os recursos',
 }) async {
   final repo = getIt<EntitlementsRepository>();

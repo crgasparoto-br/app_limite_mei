@@ -13,9 +13,9 @@ class PremiumConfig {
       id: monthlyProductId,
       title: 'Mensal',
       totalPriceLabel: 'R\$ 9,99',
-      subtitle: 'Ideal para comecar hoje com baixo custo e mais flexibilidade.',
+      subtitle: 'Ideal para começar hoje com baixo custo e mais flexibilidade.',
       type: PremiumPlanType.monthly,
-      chargeLabel: 'cobrado por mes',
+      chargeLabel: 'cobrado por mês',
     ),
     PremiumOffer(
       id: annualProductId,
@@ -30,13 +30,13 @@ class PremiumConfig {
     ),
     PremiumOffer(
       id: lifetimeProductId,
-      title: 'Vitalicio de lancamento',
+      title: 'Vitalício de lançamento',
       totalPriceLabel: 'R\$ 99,99',
       subtitle:
-          'Garanta o menor custo total com pagamento unico e acesso permanente.',
-      badge: 'Lancamento',
+          'Garanta o menor custo total com pagamento único e acesso permanente.',
+      badge: 'Lançamento',
       type: PremiumPlanType.lifetime,
-      chargeLabel: 'pagamento unico',
+      chargeLabel: 'pagamento único',
     ),
   ];
 

@@ -32,32 +32,32 @@ class PremiumOffer {
   String get actionLabel => isSubscription ? 'Assinar' : 'Comprar';
 
   String get purchaseTypeLabel =>
-      isSubscription ? 'Assinatura' : 'Compra unica';
+      isSubscription ? 'Assinatura' : 'Compra única';
 
   String get effectiveChargeLabel {
     if (chargeLabel != null) return chargeLabel!;
 
     switch (type) {
       case PremiumPlanType.monthly:
-        return 'cobrado por mes';
+        return 'cobrado por mês';
       case PremiumPlanType.annual:
         return 'cobrado por ano';
       case PremiumPlanType.lifetime:
-        return 'pagamento unico';
+        return 'pagamento único';
     }
   }
 
   String get termsSummary {
     switch (type) {
       case PremiumPlanType.monthly:
-        return '$totalPriceLabel por mes com renovacao automatica ate cancelamento.';
+        return '$totalPriceLabel por mês com renovação automática até cancelamento.';
       case PremiumPlanType.annual:
         final breakdown = breakdownPriceLabel == null
             ? ''
             : ' ($breakdownPriceLabel)';
-        return '$totalPriceLabel por ano$breakdown com renovacao automatica ate cancelamento.';
+        return '$totalPriceLabel por ano$breakdown com renovação automática até cancelamento.';
       case PremiumPlanType.lifetime:
-        return '$totalPriceLabel em pagamento unico, sem renovacao automatica.';
+        return '$totalPriceLabel em pagamento único, sem renovação automática.';
     }
   }
 
@@ -89,7 +89,7 @@ class PremiumOffer {
     if (type == PremiumPlanType.lifetime) {
       return copyWith(
         totalPriceLabel: product.price,
-        chargeLabel: 'pagamento unico',
+        chargeLabel: 'pagamento único',
       );
     }
 
@@ -122,7 +122,7 @@ class PremiumOffer {
         return copyWith(
           totalPriceLabel: pricingPhase.formattedPrice,
           breakdownPriceLabel:
-              'equivale a ${_formatCurrency(recurringPrice / 12, currencyCode: pricingPhase.priceCurrencyCode, currencySymbol: product.currencySymbol)} por mes',
+              'equivale a ${_formatCurrency(recurringPrice / 12, currencyCode: pricingPhase.priceCurrencyCode, currencySymbol: product.currencySymbol)} por mês',
           chargeLabel: 'cobrado por ano',
         );
       }
@@ -130,7 +130,7 @@ class PremiumOffer {
       if (pricingPhase.billingPeriod == 'P1M') {
         return copyWith(
           totalPriceLabel: pricingPhase.formattedPrice,
-          chargeLabel: 'cobrado por mes',
+          chargeLabel: 'cobrado por mês',
         );
       }
     }
@@ -174,7 +174,7 @@ class PremiumOffer {
       case PremiumPlanType.annual:
         return 'Anual';
       case PremiumPlanType.lifetime:
-        return 'Vitalicio';
+        return 'Vitalício';
     }
   }
 
